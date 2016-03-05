@@ -1,0 +1,7 @@
+label eel
+push 1
+push 0
+out_s
+terminate
+
+done
