@@ -85,6 +85,7 @@
   Note that this instruction is necessary to use or else the program will run infinitely.
   The instruction is mainly there for when the intended end of a program is not at the
   end of the corresponding byte-code file.
+  \newline
   \subsection{Using labels and jumps}
   Another one of the essential instructions is \verb|label|.  This instruction basically
   sets a point in the sequence of instructions that the instruction, \verb|ojmp|, can
@@ -108,7 +109,7 @@
   From there, the program carries on just like it did last time.  The only issue is that
   this isn't really the use for \verb|ojmp|, as just changes the location of the program
   for no reason.  A better example would use the instruction \verb|ocall| 
-  \footnote{\verb|ocall| is not actually implemented yet}.  Here is the
+  \footnote{\emph{ocall} is not actually implemented yet}.  Here is the
   altered program using \verb|ocall|:
   \begin{verbatim}
 	label print_int
