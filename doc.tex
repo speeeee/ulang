@@ -1,0 +1,136 @@
+\documentclass[12pt]{report}
+\title{ulang Byte-code \& Assembler}
+\usepackage[pdftex,bookmarks,colorlinks]{hyperref}
+\begin{document}
+  \maketitle
+  \tableofcontents
+  \newpage
+  \section{Introduction}
+  This is a complete\footnote{While this is the goal, the document is \emph{not} 
+  complete yet.} reference of the ulang byte-code interpreter and the
+  accompanying assembler.
+  \subsection{Purpose}
+  ulang is just a small project that I am working on.  There really isn't a set purpose
+  for ulang yet.  The ideal, however, is to create a quick and flexible byte-code
+  interpreter.  Prior to this, I had created a small LISP interpreter that shares a few 
+  similarites with this.  ulang is mainly a project to counteract some of the issues with
+  that LISP interpreter.  Aside from that, the project does not necessarily have a set
+  goal yet.
+  \section{Tutorial}
+  Before the actual reference is given, there will first be a small tutorial on how to
+  use the assembler at a less specific level.  This tutorial will cover a few essential
+  opcodes (e.g. \verb|main|, \verb|terminate|, \verb|push|).  While these opcodes
+  will be covered, the specifics of each code is explained in the language reference.
+  It should be mentioned that in this document, any text with a monospace font is
+  either a program or a command-line interaction.  The document will refer to the
+  command-line's imput with a \verb|>| preceeding the command.  An empty line
+  in the command-line is the output of an executed command.
+  \newpage
+  \subsection{A First Program}
+  The following is an example of a program written in u-Assembly that prints the number,
+  \verb|1|: 
+  \begin{verbatim}
+	main
+	push 1
+	push 0
+	out_s
+	terminate
+  \end{verbatim}
+  The above text can be copied in to a file with extension \verb|.usm|.  This is
+  probably one of the most basic u-Assembly programs.  Running the program can be done
+  by typing the following commands:
+  \begin{verbatim}
+	> assembler name name
+	> binterpreter name
+	1
+  \end{verbatim}
+  The example uses the name \verb|name.usm| as the example file.  Essentially, the
+  assembler takes an input file with extension \verb|.usm| and outputs a file with the
+  corresponding byte-code with extension \verb|.uo|.  The interpreter then reads the
+  byte-code file and executes it.  The file here, for example, prints then number, 
+  \verb|1|.
+  
+  Now to go through the file line-by-line and explain what is happening:
+  \begin{verbatim}
+	main
+  \end{verbatim}
+  This line essentially defines the entry point for which the interpreter will begin at.
+  The interpreter reads each instruction sequentially, and this is the starting point.
+  \begin{verbatim}
+	push 1
+  \end{verbatim}
+  Like most assemblers, u-Assembly has a virtual stack that the programmer can push or
+  pop things from.  This instruction pushes the number, \verb|1|, to the top of the
+  stack.  Later, the number will be popped for use by the instruction, \verb|out_s|.
+  \begin{verbatim}
+	push 0
+  \end{verbatim}
+  This is probably the most strange line.  While the instruction itself is clear, the
+  reason for it might not be as clear.  The number will be explained when explaining
+  \verb|out_s|.
+  \begin{verbatim}
+	out_s
+  \end{verbatim}
+  This is the instruction that prints the number at the top of the stack.  However, there
+  is a bit more to this.  As mentioned before, two numbers were pushed to the stack.  The
+  first number, \verb|1|, is the actual number to be printed.  The second number, 
+  \verb|0|, is actually the type of the number to be printed.  \verb|0| corresponds with
+  the type, \verb|int|, meaning that the type of what is to be printed is of type,
+  \verb|int|.  From this, the two numbers are popped and the \emph{integer}, \verb|1|,
+  is printed.
+  \begin{verbatim}
+	terminate
+  \end{verbatim}
+  This line is very simple in that when the interpreter reads this instruction, it quits.
+  Note that this instruction is necessary to use or else the program will run infinitely.
+  The instruction is mainly there for when the intended end of a program is not at the
+  end of the corresponding byte-code file.
+  \subsection{Using labels and jumps}
+  Another one of the essential instructions is \verb|label|.  This instruction basically
+  sets a point in the sequence of instructions that the instruction, \verb|ojmp|, can
+  go to.  The following is an example of this:
+  \begin{verbatim}
+	label print_int
+	push 0
+	out_s
+	terminate
+
+	main
+	push 1
+	push print_int
+	ojmp
+  \end{verbatim}
+  Something to be noted is that this program is actually functionally the same as the
+  last program, printing the number, \verb|1|.  Instead of just calling \verb|out_s|,
+  the program instead jumps to a label that does it.  As can be seen, the syntax for
+  jumping is done by pushing the label to jump to and calling \verb|ojmp|.  Note
+  that the \verb|1| pushed previously is still on the stack when it jumps to the label.
+  From there, the program carries on just like it did last time.  The only issue is that
+  this isn't really the use for \verb|ojmp|, as just changes the location of the program
+  for no reason.  A better example would use the instruction \verb|ocall| 
+  \footnote{\verb|ocall| is not actually implemented yet}.  Here is the
+  altered program using \verb|ocall|:
+  \begin{verbatim}
+	label print_int
+	push 0
+	out_s
+	return
+
+	main
+	push 1
+	push print_int
+	ocall
+	terminate
+  \end{verbatim}
+  This program is the same as the last one, but instead of terminating immediately after
+  the call, it actually returns to the point from which it was called.  This doesn't
+  really do much as it just terminates afterword, but the idea of \verb|ocall| is that
+  it simulates the behavior of a function in higher level languages.  There is also two
+  conditional jumps, called \verb|ojez| and \verb|ojns|.  The first pops a number from
+  the stack and checks if it is equal to zero.  If it is, then the jump happens; if not
+  the jump fails and the program continues as normal.  \verb|ojns| is similar, except it
+  just checks if the stack is empty (that is, empty besides the label that was pushed
+  to jump to).  The specifics of these instructions are explained in the reference.
+  \subsection{Essential instructions}
+  
+\end{document}
