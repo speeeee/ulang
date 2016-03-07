@@ -190,7 +190,11 @@ void parse(void) {
       if(refs) { r->prev = refs; } refs = r; i=lbls[0].l[stk->x.i]-1; pop(); break; }
     case CALL: { Ref *r = malloc(sizeof(Ref)); r->r = i;
       if(refs) { r->prev = refs; } refs = r; i=lbls[0].l[exprs[i].q.i]-1; break; }
-    case RETURN: { Ref *r; r = refs; i = r->r; refs = refs->prev; free(r); break; }
+    case RETURN: { Ref *r; 
+r = refs; 
+i = r->r; 
+refs = refs->prev;
+ free(r); break; }
     case MOVI: { (stk->x.ia)[stk->prev->x.i] = stk->prev->prev->x.i; 
                  pop(); pop(); pop(); break; }
     case MOVF: { (stk->x.fa)[stk->prev->x.i] = stk->prev->prev->x.f;
@@ -211,6 +215,9 @@ void parse(void) {
       read_prgm(u,md++); fclose(u); break; /* simply allocate the next lblarr */ }
     case OJMP: { // pop module, then word
       i = lbls[stk->x.i].l[stk->prev->x.i]-1; pop(); pop(); break; }
+    case OCALL: { Ref *r; r = malloc(sizeof(Ref)); r->r = i;
+      if(refs) { r->prev = refs; } refs = r; 
+      i=lbls[stk->x.i].l[stk->prev->x.i]-1; pop(); pop(); break; }
     case TERM: exit(0); break;
     default: printf("what"); exit(0); } } }
 
@@ -231,7 +238,8 @@ void read_prgm(FILE *f, int m) { char op;
       case INT: { int i; fread(&i,sizeof(int),1,f); l.i = i; break; }
       case FLT: { double i; fread(&i,sizeof(double),1,f); l.f = i; break; }
       case LNG: { long i; fread(&i,sizeof(long),1,f); l.l = i; break; } }
-    push_expr(op,l); } } } }
+    push_expr(op,l); } } }
+  Lit q; push_expr(TERM,q); }
 
 int main(int argc, char **argv) { //stk = malloc(sizeof(Stk));
   exprs = malloc(sizeof(Expr)); char *in; 
