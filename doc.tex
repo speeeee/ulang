@@ -133,5 +133,28 @@
   just checks if the stack is empty (that is, empty besides the label that was pushed
   to jump to).  The specifics of these instructions are explained in the reference.
   \subsection{Essential instructions}
-  
+  \begin{itemize}
+  \item Will be done later
+  \end{itemize}
+  \section{u-Assembly syntax}
+  TODO
+  \section{Byte-code and u-Assembly reference}
+  The rest of this text will contain information about every byte-code in the 
+  byte-code representation as well as its u-Assembly counterpart.  It should be noted
+  that u-Assembly is \emph{not} a one-to-one translation of the byte-code.  It is,
+  however, very close to one-to-one, and whenever there is a difference, it will be
+  noted in the reference.  There are also a few codes that are either unused or
+  merged with others.  The format of the actual names will be as follows:
+  op-code : name.
+  \subsection{\emph{00, 01, 02, 03 : push}}
+  \textbf{Byte-code}: The four byte-codes above correlate with different types of
+  items to be pushed: \verb|00| is an integer, \verb|01| is a float, \verb|02| is a
+  char, and \verb|03| is a long integer.  These are the four basic types in the system.
+  The stack itself is fairly simple, as it is represented by a linked-list, where
+  \verb|push| simply adds whatever is to be pushed to the end of the stack.\newline
+  \textbf{Assembler}: As seen above, all four op-codes are put into a single name in
+  u-Assembly.  The actual op-code that is called is found by whatever type of
+  element it is given.
+
+  All push functions take a single associated argument.
 \end{document}
