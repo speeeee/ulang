@@ -1,23 +1,25 @@
 \documentclass[12pt]{report}
 \title{ulang Byte-code \& Assembler}
 \author{Spencer Sallay}
+\setcounter{section}{0}
+\setcounter{secnumdepth}{3}
 \usepackage[pdftex,bookmarks,colorlinks]{hyperref}
 \begin{document}
   \maketitle
   \tableofcontents
   \newpage
-  \section{Introduction}
+  \chapter{Introduction}
   This is a complete\footnote{While this is the goal, the document is \emph{not} 
   complete yet.} reference of the ulang byte-code interpreter and the
   accompanying assembler.
-  \subsection{Purpose}
+  \section{Purpose}
   ulang is just a small project that I am working on.  There really isn't a set purpose
   for ulang yet.  The ideal, however, is to create a quick and flexible byte-code
   interpreter.  Prior to this, I had created a small LISP interpreter that shares a few 
   similarites with this.  ulang is mainly a project to counteract some of the issues with
   that LISP interpreter.  Aside from that, the project does not necessarily have a set
   goal yet.
-  \section{Tutorial}
+  \chapter{Tutorial}
   Before the actual reference is given, there will first be a small tutorial on how to
   use the assembler at a less specific level.  This tutorial will cover a few essential
   opcodes (e.g. \verb|main|, \verb|terminate|, \verb|push|).  While these opcodes
@@ -27,7 +29,7 @@
   command-line's imput with a \verb|>| preceeding the command.  An empty line
   in the command-line is the output of an executed command.
   \newpage
-  \subsection{A First Program}
+  \section{A First Program}
   The following is an example of a program written in u-Assembly that prints the number,
   \verb|1|: 
   \begin{verbatim}
@@ -87,7 +89,7 @@
   The instruction is mainly there for when the intended end of a program is not at the
   end of the corresponding byte-code file.
   \newline
-  \subsection{Using labels and jumps}
+  \section{Using labels and jumps}
   Another one of the essential instructions is \verb|label|.  This instruction basically
   sets a point in the sequence of instructions that the instruction, \verb|ojmp|, can
   go to.  The following is an example of this:
@@ -132,12 +134,12 @@
   the jump fails and the program continues as normal.  \verb|ojns| is similar, except it
   just checks if the stack is empty (that is, empty besides the label that was pushed
   to jump to).  The specifics of these instructions are explained in the reference.
-  \subsection{Essential instructions}
+  \section{Essential instructions}
   \begin{itemize}
   \item Will be done later
   \end{itemize}
-  \section{Syntax}
-  \subsection{u-Assembly syntax}
+  \chapter{Syntax}
+  \section{u-Assembly syntax}
   The syntax of u-Assembly is very simple, and only contains a few rules.  First, all
   tokens are separated by space characters.  Unlike other assemblers, all space
   characters are the same (e.g. newline, tab, etc.).  Despite this, it is usually
@@ -157,7 +159,7 @@
   accompany this op-code and act as the argument for the op-code.  As mentioned before
   op-codes requiring symbols have the symbol's size and the symbol itself as the
   arguments.
-  \section{Byte-code and u-Assembly reference}
+  \chapter{Byte-code and u-Assembly reference}
   The rest of this text will contain information about every byte-code in the 
   byte-code representation as well as its u-Assembly counterpart.  It should be noted
   that u-Assembly is \emph{not} a one-to-one translation of the byte-code.  It is,
@@ -165,6 +167,7 @@
   noted in the reference.  There are also a few codes that are either unused or
   merged with others.  The format of the actual names will be as follows:
   op-code : name.  The op-codes are written in hexadecimal.
+  \section{Miscellaneous}
   \subsection{\emph{00, 01, 02, 03 : push}}
   \textbf{Byte-code}: The four byte-codes above correlate with different types of
   items to be pushed: \verb|00| is an integer, \verb|01| is a float, \verb|02| is a
@@ -173,19 +176,61 @@
   \verb|push| simply adds whatever is to be pushed to the end of the stack.\newline
   \textbf{Assembler}: As seen above, all four op-codes are put into a single name in
   u-Assembly.  The actual op-code that is called is found by whatever type of
-  element it is given.
+  element it is given.  There is one other case, however.  If a symbol that is
+  supposed to represent a label is pushed, then it is written as two integers being
+  pushed to the stack.  The two integers represent the file and place that the
+  label refers to.  See the \verb|label| section for more information on this.
   \newline
   All push functions take a single associated argument.
-  \subsection{\emph{0F : out}}
+  \subsection{\emph{19 : pop}}
+  \textbf{Byte-code}: This instruction is the same as the \verb|drop| word in
+  higher-level stack languages, in that it simply pops from the stack and drops what
+  is popped.\newline
+  \textbf{Assembler}: \verb|pop| is a one-to-one representation.
+
+  \section{I/O op-codes}
+  \subsection{\emph{10 : in}}
+  \textbf{Byte-code}: \verb|in| is essentially the same as the C function, getchar(),
+  where a single character is retrieved from \emph{stdin} and pushed to the stack.
+  \newline
+  \textbf{Assembler}: \verb|in| is a one-to-one representation of its byte-code
+  counterpart.
+  \subsection{\emph{1A : out\_s}}
   \textbf{Byte-code}: \verb|out| is a code that prints a single numeric value.  It
   takes two arguments from the stack.  The first argument that it takes is the 
   type of the item that is to be printed.  The second argument is the argument 
   to be printed.  The code pushes nothing back to the stack.\newline
   \textbf{Assembler}: The instruction, \verb|out|, is a one-to-one representation of
   its byte-code counterpart.
-  \subsection{\emph{10 : in}}
-  \textbf{Byte-code}: \verb|in| is essentially the same as the C function, getchar(),
-  where a single character is retrieved from \emph{stdin} and pushed to the stack.
-  \textbf{Assembelr}: \verb|in| is a one-to-one representation of its byte-code
-  counterpart.
+
+  \section{Labels and jumps}
+  \subsection{\emph{11 : label}}
+  \textbf{Byte-code}: \verb|label| is a code that is used to define places in the code
+  for which the program will jump to when the time comes.  \verb|label| has an
+  associated integer that represents the instruction number that it is referring to.
+  This integer is pushed to an array of other existing labels, where each label is
+  defined by two integers: the file that the label is referring to and the actual
+  place in that file the label is referring to.\newline
+  \textbf{Assembler}: The u-Assembly version of \verb|label| is somewhat different.
+  The most apparent difference is that instead of just an integer, \verb|label| takes
+  a symbol, representing the name of the label.  This symbol is pushed to an array
+  similar that found in the byte-code interpreter.  Another side-effect is that,
+  as mentioned before in the \verb|push| section, when referring to a label, it
+  will instead translate to pushing the two integers that make up that label.
+  \newline
+  Information on how the two integers actually come into play is in the sections for
+  \verb|ojmp|, \verb|ocall|, etc.
+
+  \section{Essential op-codes}
+  \subsection{\emph{18 : terminate}}
+  \textbf{Byte-code}: This instruction essentially quits the program when read.  It
+  is one of the two instructions that are necessary in a u-Assembly program (the
+  other being \verb|main|).  \verb|terminate| takes no arguments and, since it quits
+  the program, returns nothing to the stack.\newline
+  \textbf{Assembler}: \verb|terminate| is a one-to-one representation.
+  \subsection{\emph{1C : main}}
+  \textbf{Byte-code}: This instruction essentially represents the point at which the
+  program will start executing.  This allows for there to be function-style labels.
+  \newline
+  \textbf{Assembler}: \verb|main| is a one-to-one representation.
 \end{document}
