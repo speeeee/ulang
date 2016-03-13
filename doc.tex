@@ -184,9 +184,14 @@
   All push functions take a single associated argument.
   \subsection{\emph{19 : pop}}
   \textbf{Byte-code}: This instruction is the same as the \verb|drop| word in
-  higher-level stack languages, in that it simply pops from the stack and drops what
+  higher-level stack languages in that it simply pops from the stack and drops what
   is popped.\newline
   \textbf{Assembler}: \verb|pop| is a one-to-one representation.
+  \subsection{\emph{26 : swap}}
+  \textbf{Byte-code}: This instruction is the same as the \verb|swap| word in
+  higher-level stack languages.  It swaps the positions of the two top items of
+  the stack.  The instruction takes two arguments from the stack.
+  \textbf{Assembler}: \verb|swap| is a one-to-one representation.
 
   \section{I/O op-codes}
   \subsection{\emph{10 : in}}
@@ -220,6 +225,12 @@
   \newline
   Information on how the two integers actually come into play is in the sections for
   \verb|ojmp|, \verb|ocall|, etc.
+  \subsection{\emph{21 : return}}
+  \textbf{Byte-code}: This code goes to the point in the program referred to by what
+  is at the top of the call stack.  After returning to that point, the top of
+  the call stack is dropped.  More information on the call stack is in the sections for
+  \verb|ojmp|, \verb|ocall|, etc.
+  \textbf{Assembler}: \verb|return| is a one-to-one representation.
 
   \section{Essential op-codes}
   \subsection{\emph{18 : terminate}}
