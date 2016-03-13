@@ -144,6 +144,9 @@ void pop(void) { Stk *e; e = stk; stk = stk->prev; free(e); }
 void out_s(int i, Lit q) { switch(i) { 
   case INT: printf("%i",q.i); break; case FLT: printf("%lg",q.f);
   case CHR: printf("%c",q.c); break; case LNG: printf("%li",q.l); } }
+char *getstr(int i, FILE *f) { char *l = malloc((i+1)*sizeof(char));
+  for(int z=0;z<i;z++) { l[z] = fgetc(f); } l[i] = '\0'; return l; }
+
 // void wrap_f(Ffn f) { switch(sz) { ... } }
 void exec_ffun(char *nm) { for(int i=0;i<ffsz;i++) {
   if(!strcmp(nm,ffn[i].nm)) { ffn[i].f(stk); } } }
@@ -229,15 +232,13 @@ void parse(void) {
 void read_prgm(FILE *f, int m) { char op;
   while(((op = fgetc(f)) != TERM||mn<0)&&op!=DONE) { switch(op) {
     case LABEL: { int x; fread(&x,sizeof(int),1,f); push_lbl_gen(x+m,esz); break; }
-    case LINK: { Lit l; int i; fread(&i,sizeof(int),1,f);
-                   fread(&l.ca,sizeof(char),i,f); push_expr(op,l); break; }
-    case LFUN: { Lit l; int i; fread(&i,sizeof(int),1,f);
-                 fread(&l.ca,sizeof(char),i,f); push_expr(op,l); break; }
-    case LCALL: { Lit l; int i; fread(&i,sizeof(int),1,f);
-                  fread(&l.ca,sizeof(char),i,f); push_expr(op,l); break; }
-    case IMPORT: { Lit l; int i; fread(&i,sizeof(int),1,f);
-                   l.ca = malloc((i+1)*sizeof(char));
-                   for(int z=0;z<i;z++) { l.ca[z] = fgetc(f); } l.ca[i] = '\0';
+    case LINK: { Lit l; int i; fread(&i,sizeof(int),1,f); l.ca = getstr(i,f);
+                 push_expr(op,l); break; }
+    case LFUN: { Lit l; int i; fread(&i,sizeof(int),1,f); l.ca = getstr(i,f);
+                 push_expr(op,l); break; }
+    case LCALL: { Lit l; int i; fread(&i,sizeof(int),1,f); l.ca = getstr(i,f);
+                  push_expr(op,l); break; }
+    case IMPORT: { Lit l; int i; fread(&i,sizeof(int),1,f); l.ca = getstr(i,f);
                    push_expr(op,l); break; }
     case MAIN: { mn = esz; break; }
     default: { Lit l; switch(opcodes[(int)op]) {
