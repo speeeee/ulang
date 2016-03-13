@@ -107,7 +107,7 @@ typedef struct Stk { Lit x; struct Stk *prev; } Stk;
 typedef Stk *FFun(Stk);
 typedef struct Ref { long r; struct Ref *prev; } Ref;
 typedef struct { long *l; unsigned int sz; } Modu;
-typedef struct { Stk (*f)(Stk); char *nm; int sz; } Ffn;
+typedef struct { Stk *(*f)(Stk *); char *nm; int sz; } Ffn;
 // lib.fun
 //typedef struct FFn { void *x; } FFn;
 Modu *lbls; int lsz = 0;
@@ -146,7 +146,7 @@ void out_s(int i, Lit q) { switch(i) {
   case CHR: printf("%c",q.c); break; case LNG: printf("%li",q.l); } }
 // void wrap_f(Ffn f) { switch(sz) { ... } }
 void exec_ffun(char *nm) { for(int i=0;i<ffsz;i++) {
-  if(!strcmp(nm,ffn[i].nm)) { ffn[i].f(*stk); } } }
+  if(!strcmp(nm,ffn[i].nm)) { ffn[i].f(stk); } } }
 Stk *stkref(int e) { Stk *q; q = stk;
   for(int i=0;i<e;i++) { q = q->prev; } return q; }
 
