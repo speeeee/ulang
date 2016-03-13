@@ -243,7 +243,7 @@
   \textbf{Byte-code}: This code goes to the point in the program referred to by what
   is at the top of the call stack.  After returning to that point, the top of
   the call stack is dropped.  More information on the call stack is in the sections for
-  \verb|ojmp|, \verb|ocall|, etc.
+  \verb|ojmp|, \verb|ocall|, etc.\newline
   \textbf{Assembler}: \verb|return| is a one-to-one representation.
 
   \section{Importing other files and linking libraries}
@@ -253,7 +253,7 @@
   details on the actual linking in the C intefacing section.  \verb|link| takes a
   symbol as its only argument, the symbol being the name of the library to be linked
   (note that the library's extension is needed).  The library is pushed to the stack
-  for which functions can be pulled from.
+  for which functions can be pulled from.\newline
   \textbf{Assembler}: The instruction works like any other one that takes a symbol as
   its argument.
   \subsection{\emph{2D : import}}
@@ -269,13 +269,40 @@
   the function takes.  It also has an associated symbol argument which is the name
   of the function to be extracted.  The function is then pushed to an array of
   functions from different libraries.  The library itself remains on the stack.
+  \newline
   \textbf{Assembler}: The instruction works like any other that requires a symbol
   as its argument.
   \subsection{\emph{2F : done}}
   \textbf{Byte-code}: This instruction is specifically significant when being read
   by the program when importing a file.  The instruction tells the interpreter to
-  stop reading the file.  It is necessary for any file to be imported.
+  stop reading the file.  It is necessary for any file to be imported.\newline
   \textbf{Assembler}: \verb|done| is a one-to-one representation.
+  \subsection{\emph{31 : ojmp}}
+  \textbf{Byte-code}: Jumps to the label that is on top of the stack.  The stack after
+  jumping is the same except the two integers representing the label are gone.\newline
+  \textbf{Assembler}: \verb|ojmp| is a one-to-one representation.
+  \subsection{\emph{30 : ocall}}
+  \textbf{Byte-code}: This instruction is the same as \verb|ojmp|, but with the
+  side-effect of pushing the old location before jumping to the call stack.  The
+  position pushed to the call stack is meant to be called when \verb|return| is
+  called, for which the program will return to the old position before calling.
+  \newline
+  \textbf{Assembler}: \verb|ocall| is a one-to-one representation.
+  \subsection{\emph{32 : ojns}}
+  \textbf{Byte-code}: This instruction is the same as \verb|ojmp| but it only triggers
+  if the stack (except for the label) is empty.  If it is, it will jump; if not, it
+  will remain in its old position.\newline
+  \textbf{Assembler}: \verb|ojns| is a one-to-one representation.
+  \subsection{\emph{33 : ojez}}
+  \textbf{Byte-code}: This instruction is the same as \verb|ojmp|, but it only triggers
+  if the number at the top of the stack is 0.\newline
+  \textbf{Assembler}: \verb|ojez| is a one-to-one representation.
+  \subsection{\emph{34 : lcall}}
+  \textbf{Byte-code}: Calls the function that is represented by the symbolic argument
+  associated with the op-code.  This function is one extracted from a dynamically
+  linked library.\newline
+  \textbf{Assembler}: \verb|lcall| works like any other op-code that requires
+  a symbol as its argument.
 
   \section{Essential op-codes}
   \subsection{\emph{18 : terminate}}
