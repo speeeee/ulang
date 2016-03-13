@@ -190,7 +190,8 @@ void parse(FILE *o, FILE *i, int eo, int m) { Lit l;
          else if(!strcmp(l.x.s,":q")) { exit(0); }
          else if(opcode(l.x.s)!=-1) { int ii = opcode(l.x.s); write_c(ii,o); 
            if(opcodes[ii].argsz) {
-             Lit l = lexd(i,eo); n_out(l,opcodes[ii].argsz,o); } } } } }
+             Lit l = lexd(i,eo); n_out(l,opcodes[ii].argsz,o); } }
+         else { printf("error: no such op-code: %s",l.x.s); } } } }
 
 int main(int argc, char **argv) { ls = malloc(sizeof(Ls));
   ls[lsz++].s = malloc(sizeof(char *)); FILE *g;
