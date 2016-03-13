@@ -58,6 +58,7 @@
 #define OJMP 49
 #define OJNS 50
 #define OJEZ 51
+#define LCALL 52
 
 typedef int    Word;
 typedef long   DWord;
@@ -103,17 +104,21 @@ typedef struct { union { char c; int i; long l; double f;
                          char *ca; int *ia; long *la; double *fa; void *v; }; } Lit;
 typedef struct { char op; Lit q; } Expr;
 typedef struct Stk { Lit x; struct Stk *prev; } Stk;
+typedef Stk *FFun(Stk);
 typedef struct Ref { long r; struct Ref *prev; } Ref;
 typedef struct { long *l; unsigned int sz; } Modu;
+typedef struct { Stk (*f)(Stk); char *nm; int sz; } Ffn;
+// lib.fun
 //typedef struct FFn { void *x; } FFn;
 Modu *lbls; int lsz = 0;
 Expr *exprs; long esz = 0; long mn = -1;
-void **ffn; int ffsz = 0;
+Ffn *ffn; int ffsz = 0;
 Stk *stk; Ref *refs;
 int md = 0;
 
-void push_f(void *x) { if(ffn) { ffn = realloc(ffn,(ffsz+1)*sizeof(void *)); }
-  else { ffn = malloc(sizeof(void *)); } ffn[ffsz++] = x; }
+void push_f(void *x, char *nm, int sz) { if(ffn) { 
+    ffn = realloc(ffn,(ffsz+1)*sizeof(Ffn)); }
+  else { ffn = malloc(sizeof(Ffn)); } ffn[ffsz++] = (Ffn) { x, nm, sz }; }
 void push_lbl(long plc) { if(lbls[0].sz) { 
     lbls[0].l = realloc(lbls[0].l,(lbls[0].sz+1)*sizeof(long)); }
   else { lbls[0].l = malloc(sizeof(long)); }
@@ -139,7 +144,9 @@ void pop(void) { Stk *e; e = stk; stk = stk->prev; free(e); }
 void out_s(int i, Lit q) { switch(i) { 
   case INT: printf("%i",q.i); break; case FLT: printf("%lg",q.f);
   case CHR: printf("%c",q.c); break; case LNG: printf("%li",q.l); } }
-
+// void wrap_f(Ffn f) { switch(sz) { ... } }
+void exec_ffun(char *nm) { for(int i=0;i<ffsz;i++) {
+  if(!strcmp(nm,ffn[i].nm)) { ffn[i].f(*stk); } } }
 Stk *stkref(int e) { Stk *q; q = stk;
   for(int i=0;i<e;i++) { q = q->prev; } return q; }
 
@@ -158,7 +165,8 @@ int opcodes[] = { /*push*/INT,FLT,CHR,LNG,-1,/*malloc*/INT,INT,INT,INT,
                   /*reff*/-1,/*refc*/-1,/*refl*/-1,/*return*/-1,/*movi*/-1,
                   /*movf*/-1,/*swap*/-1,/*sref*/-1, /*link*/INT,/*addi*/-1,
                   /*addf*/-1,/*addc*/-1,/*addl*/-1,/*import*/INT,/*lfun*/INT,
-                  /*done*/-1,/*ocall*/-1,/*ojmp*/-1,/*ojns*/-1,/*ojez*/-1 };
+                  /*done*/-1,/*ocall*/-1,/*ojmp*/-1,/*ojns*/-1,/*ojez*/-1,
+                  /*lcall*/INT };
 
 // pop for all necessary functions.
 void parse(void) {
@@ -190,11 +198,7 @@ void parse(void) {
       if(refs) { r->prev = refs; } refs = r; i=lbls[0].l[stk->x.i]-1; pop(); break; }
     case CALL: { Ref *r = malloc(sizeof(Ref)); r->r = i;
       if(refs) { r->prev = refs; } refs = r; i=lbls[0].l[exprs[i].q.i]-1; break; }
-    case RETURN: { Ref *r; 
-r = refs; 
-i = r->r; 
-refs = refs->prev;
- free(r); break; }
+    case RETURN: { Ref *r; r = refs; i = r->r; refs = refs->prev; free(r); break; }
     case MOVI: { (stk->x.ia)[stk->prev->x.i] = stk->prev->prev->x.i; 
                  pop(); pop(); pop(); break; }
     case MOVF: { (stk->x.fa)[stk->prev->x.i] = stk->prev->prev->x.f;
@@ -206,9 +210,10 @@ refs = refs->prev;
     case ADDF: { stk->prev->x.f = stk->x.f+stk->prev->x.f; pop(); break; }
     case ADDC: { stk->prev->x.c = stk->x.c+stk->prev->x.c; pop(); break; }
     case ADDL: { stk->prev->x.l = stk->x.l+stk->prev->x.l; pop(); break; }
-    case LINK: { nstkptr(); stk->x.v = dlopen(exprs[i].q.ca,RTLD_LAZY);
-                   break; }
-    case LFUN: { void *z; z = dlsym(stk->x.v,exprs[i].q.ca); push_f(z); break; }
+    case LINK: { nstkptr(); stk->x.v = dlopen(exprs[i].q.ca,RTLD_LAZY); break; }
+    case LFUN: { void *z; z = dlsym(stk->prev->x.v,exprs[i].q.ca); 
+      push_f(z,exprs[i].q.ca,stk->x.i); pop(); break; }
+    case LCALL: { exec_ffun(exprs[i].q.ca); break; }
     case IMPORT: { char *in; in = malloc((strlen(exprs[i].q.ca)+4)*sizeof(char));
       strcpy(in,exprs[i].q.ca); strcat(in,".uo"); FILE *u; u = fopen(in,"rb");
       lbls = realloc(lbls,(++lsz)*sizeof(Modu));
@@ -228,6 +233,8 @@ void read_prgm(FILE *f, int m) { char op;
                    fread(&l.ca,sizeof(char),i,f); push_expr(op,l); break; }
     case LFUN: { Lit l; int i; fread(&i,sizeof(int),1,f);
                  fread(&l.ca,sizeof(char),i,f); push_expr(op,l); break; }
+    case LCALL: { Lit l; int i; fread(&i,sizeof(int),1,f);
+                  fread(&l.ca,sizeof(char),i,f); push_expr(op,l); break; }
     case IMPORT: { Lit l; int i; fread(&i,sizeof(int),1,f);
                    l.ca = malloc((i+1)*sizeof(char));
                    for(int z=0;z<i;z++) { l.ca[z] = fgetc(f); } l.ca[i] = '\0';
