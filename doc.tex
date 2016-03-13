@@ -136,8 +136,27 @@
   \begin{itemize}
   \item Will be done later
   \end{itemize}
-  \section{u-Assembly syntax}
-  TODO
+  \section{Syntax}
+  \subsection{u-Assembly syntax}
+  The syntax of u-Assembly is very simple, and only contains a few rules.  First, all
+  tokens are separated by space characters.  Unlike other assemblers, all space
+  characters are the same (e.g. newline, tab, etc.).  Despite this, it is usually
+  better to designate a line for each op-code (and associated arguments with that
+  op-code).  Op-codes themselves are comprised of any characters that are not
+  spaces and they must not begin with a number.  There are also special times where
+  symbols are input for other purposes.  For example, the \verb|import| code requires
+  a symbol representing the name of the file to refer to.  When printing out to the
+  byte-code file, what is written is the op-code, the size of the symbol, and
+  the symbol itself represented as a list of characters.  The last type of token is
+  the number.  Normally, numbers are read as integers, but by suffixing them with a
+  certain character (\verb|f|,\verb|c|,\verb|l|), they will refer to that type
+  (\emph{float},\emph{char}, and \emph{long}, respectively).
+  \subsection{Byte-code syntax}
+  The syntax of the byte-code interpreter is also very simple.  All op-codes are
+  comprised of a single byte.  Optionally, a literal of a certain size can
+  accompany this op-code and act as the argument for the op-code.  As mentioned before
+  op-codes requiring symbols have the symbol's size and the symbol itself as the
+  arguments.
   \section{Byte-code and u-Assembly reference}
   The rest of this text will contain information about every byte-code in the 
   byte-code representation as well as its u-Assembly counterpart.  It should be noted
@@ -145,7 +164,7 @@
   however, very close to one-to-one, and whenever there is a difference, it will be
   noted in the reference.  There are also a few codes that are either unused or
   merged with others.  The format of the actual names will be as follows:
-  op-code : name.
+  op-code : name.  The op-codes are written in hexadecimal.
   \subsection{\emph{00, 01, 02, 03 : push}}
   \textbf{Byte-code}: The four byte-codes above correlate with different types of
   items to be pushed: \verb|00| is an integer, \verb|01| is a float, \verb|02| is a
@@ -155,6 +174,18 @@
   \textbf{Assembler}: As seen above, all four op-codes are put into a single name in
   u-Assembly.  The actual op-code that is called is found by whatever type of
   element it is given.
-
+  \newline
   All push functions take a single associated argument.
+  \subsection{\emph{0F : out}}
+  \textbf{Byte-code}: \verb|out| is a code that prints a single numeric value.  It
+  takes two arguments from the stack.  The first argument that it takes is the 
+  type of the item that is to be printed.  The second argument is the argument 
+  to be printed.  The code pushes nothing back to the stack.\newline
+  \textbf{Assembler}: The instruction, \verb|out|, is a one-to-one representation of
+  its byte-code counterpart.
+  \subsection{\emph{10 : in}}
+  \textbf{Byte-code}: \verb|in| is essentially the same as the C function, getchar(),
+  where a single character is retrieved from \emph{stdin} and pushed to the stack.
+  \textbf{Assembelr}: \verb|in| is a one-to-one representation of its byte-code
+  counterpart.
 \end{document}
