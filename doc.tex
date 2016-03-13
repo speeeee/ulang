@@ -192,6 +192,20 @@
   higher-level stack languages.  It swaps the positions of the two top items of
   the stack.  The instruction takes two arguments from the stack.
   \textbf{Assembler}: \verb|swap| is a one-to-one representation.
+  \subsection{\emph{27 : sref}}
+  \textbf{Byte-code}: This instruction pushes to the stack the element that is
+  \emph{n} elements down in the stack where \emph{n} is an element on the stack to be
+  used.  Note that the number excludes itself when referring to the stack.  Also, the
+  element pushed does not delete the old one in the stack.
+  \textbf{Assembler}: \verb|sref| is a one-to-one representation.
+  \subsection{\emph{29 : arith}}
+  \textbf{Byte-code}: This instruction performs different arithmatic operations
+  depending on its arguments.  From bottom to top, the op-code takes 4
+  arguments: the left number, the right number, the operator, and the type.  The
+  operator is a number that corresponds with five different operators: 0 – add,
+  1 – subtract, 2 – multiply, 3 – divide, 4 – exponent.  A single item is pushed back
+  to the stack which is the result of the operation.
+  \textbf{Assembler}: \verb|arith| is a one-to-one representation.
 
   \section{I/O op-codes}
   \subsection{\emph{10 : in}}
@@ -231,6 +245,37 @@
   the call stack is dropped.  More information on the call stack is in the sections for
   \verb|ojmp|, \verb|ocall|, etc.
   \textbf{Assembler}: \verb|return| is a one-to-one representation.
+
+  \section{Importing other files and linking libraries}
+  \subsection{\emph{28 : link}}
+  \textbf{Byte-code}: \verb|link| is the main instruction used to interact with
+  dynamically linked libraries and the main way to interact with C functions.  More
+  details on the actual linking in the C intefacing section.  \verb|link| takes a
+  symbol as its only argument, the symbol being the name of the library to be linked
+  (note that the library's extension is needed).  The library is pushed to the stack
+  for which functions can be pulled from.
+  \textbf{Assembler}: The instruction works like any other one that takes a symbol as
+  its argument.
+  \subsection{\emph{2D : import}}
+  \textbf{Byte-code}: This instruction essentially imports another byte-code file.  It
+  starts reading the file, only looking for labels and other imports.  Labels found are
+  pushed to the label array, with the integer representing the file being unique to
+  that file.  The rest will be explained as the feature is confirmed to be fully
+  functional.
+  \subsection{\emph{2E : lfun}}
+  \textbf{Byte-code}: This instruction is used to extract functions from already
+  imported dynamically linked libraries.  It takes two arguments from the stack:
+  the library to be extracted from and an integer representing the amount of inputs
+  the function takes.  It also has an associated symbol argument which is the name
+  of the function to be extracted.  The function is then pushed to an array of
+  functions from different libraries.  The library itself remains on the stack.
+  \textbf{Assembler}: The instruction works like any other that requires a symbol
+  as its argument.
+  \subsection{\emph{2F : done}}
+  \textbf{Byte-code}: This instruction is specifically significant when being read
+  by the program when importing a file.  The instruction tells the interpreter to
+  stop reading the file.  It is necessary for any file to be imported.
+  \textbf{Assembler}: \verb|done| is a one-to-one representation.
 
   \section{Essential op-codes}
   \subsection{\emph{18 : terminate}}
