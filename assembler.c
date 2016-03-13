@@ -75,9 +75,9 @@ OpC opcodes[] = { { "push", -1 /* varies */ }, { "pushw", -1 }, { "pushf", -1 },
                   { "addi", 0 }, { "addf", 0 }, { "addc", 0 }, { "addl", 0 },
                   { "import", -1 /* varies */ }, { "lfun", -1 /* varies */ },
                   { "done", 0 }, { "ocall", 0 }, { "ojmp", 0 },
-                  { "ojns", 0 }, { "ojez", 0 } };
+                  { "ojns", 0 }, { "ojez", 0 }, { "lcall" } };
 typedef struct { char **s; int sz; } Ls;
-int osz = 52; int md = 0;
+int osz = 53; int md = 0;
 // defined labels
 Ls *ls; int lsz = 0;
 
@@ -176,6 +176,10 @@ void parse(FILE *o, FILE *i, int eo, int m) { Lit l;
              fwrite(&x,sizeof(int),1,o); fwrite(l.x.s,sizeof(char),x,o); }
            else { printf("error\n"); exit(0); } }
          else if(!strcmp(l.x.s,"lfun")) { write_c(46,o); l = lexd(i,eo);
+           if(l.type == SYM) { int x = strlen(l.x.s);
+             fwrite(&x,sizeof(int),1,o); fwrite(l.x.s,sizeof(char),x,o); }
+           else { printf("error\n"); exit(0); } }
+         else if(!strcmp(l.x.s,"lcall")) { write_c(52,o); l = lexd(i,eo);
            if(l.type == SYM) { int x = strlen(l.x.s);
              fwrite(&x,sizeof(int),1,o); fwrite(l.x.s,sizeof(char),x,o); }
            else { printf("error\n"); exit(0); } }
