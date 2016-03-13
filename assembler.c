@@ -72,7 +72,7 @@ OpC opcodes[] = { { "push", -1 /* varies */ }, { "pushw", -1 }, { "pushf", -1 },
                   { "refc", 0 }, { "refl", 0 }, { "return", 0 }, { "movi", 0 },
                   { "movf", 0 }, { "movc", 0 }, { "movl", 0 },
                   { "swap", 0 }, { "sref", 0 }, { "link", -1 /* varies */ },
-                  { "addi", 0 }, { "addf", 0 }, { "addc", 0 }, { "addl", 0 },
+                  { "arith", 0 }, { "addf", 0 }, { "addc", 0 }, { "addl", 0 },
                   { "import", -1 /* varies */ }, { "lfun", -1 /* varies */ },
                   { "done", 0 }, { "ocall", 0 }, { "ojmp", 0 },
                   { "ojns", 0 }, { "ojez", 0 }, { "lcall" } };
