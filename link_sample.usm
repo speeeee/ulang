@@ -1,5 +1,6 @@
 main
 link test_lib.dylib
+push 0
 lfun prnH
 lcall prnH
 terminate
