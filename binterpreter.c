@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <dlfcn.h>
+#include <math.h>
 
 #define P 4
 #define PW 0
@@ -47,7 +48,7 @@
 #define SWAP 38
 #define SREF 39
 #define LINK 40
-#define ADDI 41
+#define ARITH 41
 #define ADDF 42
 #define ADDC 43
 #define ADDL 44
@@ -147,6 +148,33 @@ void out_s(int i, Lit q) { switch(i) {
 char *getstr(int i, FILE *f) { char *l = malloc((i+1)*sizeof(char));
   for(int z=0;z<i;z++) { l[z] = fgetc(f); } l[i] = '\0'; return l; }
 
+void add(Stk *a,Stk *b,int t) { switch(t) { 
+  case INT: b->x.i = a->x.i+b->x.i; break;
+  case FLT: b->x.f = a->x.f+b->x.f; break; case CHR: b->x.c = a->x.c+b->x.c; break;
+  case LNG: b->x.l = a->x.l+b->x.l; break; } pop(); }
+void sub(Stk *a,Stk *b,int t) { switch(t) { 
+  case INT: b->x.i = a->x.i-b->x.i; break;
+  case FLT: b->x.f = a->x.f-b->x.f; break; case CHR: b->x.c = a->x.c-b->x.c; break;
+  case LNG: b->x.l = a->x.l-b->x.l; break; } pop(); }
+void mul(Stk *a,Stk *b,int t) { switch(t) { 
+  case INT: b->x.i = a->x.i*b->x.i; break;
+  case FLT: b->x.f = a->x.f*b->x.f; break; case CHR: b->x.c = a->x.c*b->x.c; break;
+  case LNG: b->x.l = a->x.l*b->x.l; break; } pop(); }
+void dv(Stk *a,Stk *b,int t) { switch(t) { 
+  case INT: b->x.i = a->x.i/b->x.i; break;
+  case FLT: b->x.f = a->x.f/b->x.f; break; case CHR: b->x.c = a->x.c/b->x.c; break;
+  case LNG: b->x.l = a->x.l/b->x.l; break; } pop(); }
+void pw(Stk *a,Stk *b,int t) { switch(t) { 
+  case INT: b->x.i = pow(a->x.i,b->x.i); break;
+  case FLT: b->x.f = pow(a->x.f,b->x.f); break; 
+  case CHR: b->x.c = pow(a->x.c,b->x.c); break; 
+  case LNG: b->x.l = pow(a->x.l,b->x.l); break; } pop(); }
+
+void arith(int op, int typ) { pop(); pop(); switch(op) {
+  case 0: add(stk,stk->prev,typ); break; case 1: sub(stk,stk->prev,typ); break;
+  case 2: mul(stk,stk->prev,typ); break; case 3: dv(stk,stk->prev,typ); break;
+  case 4: pw(stk,stk->prev,typ); break; } }
+
 // void wrap_f(Ffn f) { switch(sz) { ... } }
 void exec_ffun(char *nm) { for(int i=0;i<ffsz;i++) {
   if(!strcmp(nm,ffn[i].nm)) { ffn[i].f(stk); } } }
@@ -209,10 +237,7 @@ void parse(void) {
     case SWAP: { stk->prev->prev = stk; stk = stk->prev; break; }
     case SREF: { Stk *e = stkref(stk->x.i); pop(); nstkptr();
                  *(stk) = *(e); break; }
-    case ADDI: { stk->prev->x.i = stk->x.i+stk->prev->x.i; pop(); break; }
-    case ADDF: { stk->prev->x.f = stk->x.f+stk->prev->x.f; pop(); break; }
-    case ADDC: { stk->prev->x.c = stk->x.c+stk->prev->x.c; pop(); break; }
-    case ADDL: { stk->prev->x.l = stk->x.l+stk->prev->x.l; pop(); break; }
+    case ARITH: { arith(stk->x.i,stk->prev->x.i); break; }
     case LINK: { nstkptr(); stk->x.v = dlopen(exprs[i].q.ca,RTLD_LAZY); break; }
     case LFUN: { void *z; z = dlsym(stk->prev->x.v,exprs[i].q.ca); 
       push_f(z,exprs[i].q.ca,stk->x.i); pop(); break; }
