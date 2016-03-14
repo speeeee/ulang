@@ -103,7 +103,7 @@ void read_prgm(FILE *, int);
 //typedef struct Stk { void *x; struct Stk *prev; } Stk;
 typedef struct { union { char c; int i; long l; double f;
                          char *ca; int *ia; long *la; double *fa; void *v; }; } Lit;
-typedef struct { char op; Lit q; } Expr;
+typedef struct { char op; Lit q; int m; } Expr;
 typedef struct Stk { Lit x; struct Stk *prev; } Stk;
 typedef Stk *FFun(Stk);
 typedef struct Ref { long r; struct Ref *prev; } Ref;
@@ -127,8 +127,8 @@ void push_lbl(long plc) { if(lbls[0].sz) {
 void push_lbl_gen(int m,long plc) { if(lbls[m].sz) {
     lbls[m].l = realloc(lbls[m].l,(lbls[m].sz+1)*sizeof(long)); }
   else { lbls[m].l = malloc(sizeof(long)); } lbls[m].l[lbls[m].sz++] = plc; }
-void push_expr(char op, Lit q) { exprs = realloc(exprs,(esz+1)*sizeof(Expr));
-  exprs[esz++] = (Expr) { op, q }; }
+void push_expr(char op, Lit q, int m) { exprs = realloc(exprs,(esz+1)*sizeof(Expr));
+  exprs[esz++] = (Expr) { op, q, m }; }
 // will be better made later.
 void nstkptr(void) { if(stk) { Stk *q = malloc(sizeof(Stk));
   q->prev = malloc(sizeof(Stk)); q->prev = stk; stk = q; }
@@ -244,13 +244,13 @@ void parse(void) {
     case LCALL: { exec_ffun(exprs[i].q.ca); break; }
     case IMPORT: { char *in; in = malloc((strlen(exprs[i].q.ca)+4)*sizeof(char));
       strcpy(in,exprs[i].q.ca); strcat(in,".uo"); FILE *u; u = fopen(in,"rb");
-      lbls = realloc(lbls,(++lsz)*sizeof(Modu));
+      lbls = realloc(lbls,(++lsz)*sizeof(Modu)); lbls[lsz-1].sz = 0;
       read_prgm(u,md++); fclose(u); break; /* simply allocate the next lblarr */ }
     case OJMP: { // pop module, then word
-      i = lbls[stk->x.i].l[stk->prev->x.i]-1; pop(); pop(); break; }
+      i = lbls[stk->x.i+exprs[i].m].l[stk->prev->x.i]-1; pop(); pop(); break; }
     case OCALL: { Ref *r; r = malloc(sizeof(Ref)); r->r = i;
       if(refs) { r->prev = refs; } refs = r; 
-      i=lbls[stk->x.i].l[stk->prev->x.i]-1; pop(); pop(); break; }
+      i=lbls[stk->x.i+exprs[i].m].l[stk->prev->x.i]-1; pop(); pop(); break; }
     case TERM: exit(0); break;
     default: printf("what"); exit(0); } } }
 
@@ -258,21 +258,21 @@ void read_prgm(FILE *f, int m) { char op;
   while(((op = fgetc(f)) != TERM||mn<0)&&op!=DONE) { switch(op) {
     case LABEL: { int x; fread(&x,sizeof(int),1,f); push_lbl_gen(x+m,esz); break; }
     case LINK: { Lit l; int i; fread(&i,sizeof(int),1,f); l.ca = getstr(i,f);
-                 push_expr(op,l); break; }
+                 push_expr(op,l,m); break; }
     case LFUN: { Lit l; int i; fread(&i,sizeof(int),1,f); l.ca = getstr(i,f);
-                 push_expr(op,l); break; }
+                 push_expr(op,l,m); break; }
     case LCALL: { Lit l; int i; fread(&i,sizeof(int),1,f); l.ca = getstr(i,f);
-                  push_expr(op,l); break; }
+                  push_expr(op,l,m); break; }
     case IMPORT: { Lit l; int i; fread(&i,sizeof(int),1,f); l.ca = getstr(i,f);
-                   push_expr(op,l); break; }
+                   push_expr(op,l,m); break; }
     case MAIN: { mn = esz; break; }
     default: { Lit l; switch(opcodes[(int)op]) {
       case CHR: { char i; fread(&i,sizeof(char),1,f); l.c = i; break; }
       case INT: { int i; fread(&i,sizeof(int),1,f); l.i = i; break; }
       case FLT: { double i; fread(&i,sizeof(double),1,f); l.f = i; break; }
       case LNG: { long i; fread(&i,sizeof(long),1,f); l.l = i; break; } }
-    push_expr(op,l); } } }
-  Lit q; push_expr(TERM,q); }
+    push_expr(op,l,m); } } }
+  Lit q; push_expr(TERM,q,m); }
 
 int main(int argc, char **argv) { //stk = malloc(sizeof(Stk));
   exprs = malloc(sizeof(Expr)); char *in; 
