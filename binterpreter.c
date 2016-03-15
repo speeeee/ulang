@@ -60,6 +60,7 @@
 #define NS 50
 #define OJEZ 51
 #define LCALL 52
+#define OJNZ 53
 
 typedef int    Word;
 typedef long   DWord;
@@ -198,7 +199,7 @@ int opcodes[] = { /*push*/INT,FLT,CHR,LNG,-1,/*malloc*/INT,INT,INT,INT,
                   /*movf*/-1,/*swap*/-1,/*sref*/-1, /*link*/INT,/*addi*/-1,
                   /*addf*/-1,/*addc*/-1,/*addl*/-1,/*import*/INT,/*lfun*/INT,
                   /*done*/-1,/*ocall*/-1,/*ojmp*/-1,/*ojns*/-1,/*ojez*/-1,
-                  /*lcall*/INT };
+                  /*lcall*/INT,/*ojnz*/-1 };
 
 // pop for all necessary functions.
 void parse(void) {
@@ -255,6 +256,9 @@ void parse(void) {
     case NS: { if(!stk) { nstkptr(); stk->x.i = 1; } else { nstkptr();
       stk->x.i = 0; } break; }
     case OJEZ: { if(!stk->prev->prev->x.i) { 
+      i = lbls[stk->x.i+exprs[i].m].l[stk->prev->x.i]-1; }
+      pop(); pop(); pop(); break; }
+    case OJNZ: { if(stk->prev->prev->x.i) { 
       i = lbls[stk->x.i+exprs[i].m].l[stk->prev->x.i]-1; }
       pop(); pop(); pop(); break; }
     case TERM: exit(0); break;
