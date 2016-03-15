@@ -288,15 +288,19 @@
   called, for which the program will return to the old position before calling.
   \newline
   \textbf{Assembler}: \verb|ocall| is a one-to-one representation.
-  \subsection{\emph{32 : ojns}}
-  \textbf{Byte-code}: This instruction is the same as \verb|ojmp| but it only triggers
-  if the stack (except for the label) is empty.  If it is, it will jump; if not, it
-  will remain in its old position.\newline
-  \textbf{Assembler}: \verb|ojns| is a one-to-one representation.
+  \subsection{\emph{32 : ns}}
+  \textbf{Byte-code}: This instruction essentially tests if the stack has anything
+  in it.  If so, it pushes \verb|1| (true) to the stack, and if not, it pushes
+  \verb|0|.\newline
+  \textbf{Assembler}: \verb|ns| is a one-to-one representation.
   \subsection{\emph{33 : ojez}}
   \textbf{Byte-code}: This instruction is the same as \verb|ojmp|, but it only triggers
   if the number at the top of the stack is 0.\newline
   \textbf{Assembler}: \verb|ojez| is a one-to-one representation.
+  \subsection{\emph{35 : ojnz}}
+  \textbf{Byte-code}: This instruction tests using the opposite condition as
+  \verb|ojez|.
+  \textbf{Assembler}: \verb|ojnz| is a one-to-one representation.
   \subsection{\emph{34 : lcall}}
   \textbf{Byte-code}: Calls the function that is represented by the symbolic argument
   associated with the op-code.  This function is one extracted from a dynamically
