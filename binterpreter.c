@@ -57,7 +57,7 @@
 #define DONE 47
 #define OCALL 48
 #define OJMP 49
-#define OJNS 50
+#define NS 50
 #define OJEZ 51
 #define LCALL 52
 
@@ -112,6 +112,7 @@ typedef struct { Stk *(*f)(Stk *); char *nm; int sz; } Ffn;
 // lib.fun
 //typedef struct FFn { void *x; } FFn;
 Modu *lbls; int lsz = 0;
+// linked-list with literal pointers as labels?
 Expr *exprs; long esz = 0; long mn = -1;
 Ffn *ffn; int ffsz = 0;
 Stk *stk; Ref *refs;
@@ -251,6 +252,11 @@ void parse(void) {
     case OCALL: { Ref *r; r = malloc(sizeof(Ref)); r->r = i;
       if(refs) { r->prev = refs; } refs = r; 
       i=lbls[stk->x.i+exprs[i].m].l[stk->prev->x.i]-1; pop(); pop(); break; }
+    case NS: { if(!stk) { nstkptr(); stk->x.i = 1; } else { nstkptr();
+      stk->x.i = 0; } break; }
+    case OJEZ: { if(!stk->prev->prev->x.i) { 
+      i = lbls[stk->x.i+exprs[i].m].l[stk->prev->x.i]-1; }
+      pop(); pop(); pop(); break; }
     case TERM: exit(0); break;
     default: printf("what"); exit(0); } } }
 

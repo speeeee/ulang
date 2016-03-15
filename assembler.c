@@ -75,7 +75,7 @@ OpC opcodes[] = { { "push", -1 /* varies */ }, { "pushw", -1 }, { "pushf", -1 },
                   { "arith", 0 }, { "addf", 0 }, { "addc", 0 }, { "addl", 0 },
                   { "import", -1 /* varies */ }, { "lfun", -1 /* varies */ },
                   { "done", 0 }, { "ocall", 0 }, { "ojmp", 0 },
-                  { "ojns", 0 }, { "ojez", 0 }, { "lcall" } };
+                  { "ns", 0 }, { "ojez", 0 }, { "lcall" } };
 typedef struct { char **s; int sz; } Ls;
 int osz = 53; int md = 0;
 // defined labels
