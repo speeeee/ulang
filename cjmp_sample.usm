@@ -1,0 +1,11 @@
+label yes
+push 1
+push 0
+out_s
+terminate
+
+main
+push 0
+push yes
+ojez
+terminate
