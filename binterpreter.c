@@ -190,16 +190,17 @@ void DESTROY(Stk *x) {
  if(x->prev) { DESTROY(x->prev); } 
   free(x); } }
 
-int opcodes[] = { /*push*/INT,FLT,CHR,LNG,-1,/*malloc*/INT,INT,INT,INT,
-                  /*realloc*/-1,/*free*/-1,
-                  /*mov*/INT,-1,/*call*/INT,-1,/*out*/INT,/*in*/-1,/*label*/INT,
-                  /*ref*/INT,-1,/*jns*/INT,-1,/*jmp*/INT,-1,/*terminate*/-1,
-                  /*pop*/-1,/*out_s*/-1,/*in_s*/-1,/*main*/-1, /*refi*/-1,
-                  /*reff*/-1,/*refc*/-1,/*refl*/-1,/*return*/-1,/*movi*/-1,
-                  /*movf*/-1,/*swap*/-1,/*sref*/-1, /*link*/INT,/*addi*/-1,
-                  /*addf*/-1,/*addc*/-1,/*addl*/-1,/*import*/INT,/*lfun*/INT,
-                  /*done*/-1,/*ocall*/-1,/*ojmp*/-1,/*ojns*/-1,/*ojez*/-1,
-                  /*lcall*/INT,/*ojnz*/-1 };
+int opcodes[54] = { /*push*/INT,FLT,CHR,LNG,-1,/*malloc*/INT,INT,INT,INT,
+                    /*realloc*/-1,/*free*/-1,
+                    /*mov*/INT,-1,/*call*/INT,-1,/*out*/INT,/*in*/-1,/*label*/INT,
+                    /*ref*/INT,-1,/*jns*/INT,-1,/*jmp*/INT,-1,/*terminate*/-1,
+                    /*pop*/-1,/*out_s*/-1,/*in_s*/-1,/*main*/-1, /*refi*/-1,
+                    /*reff*/-1,/*refc*/-1,/*refl*/-1,/*return*/-1,/*movi*/-1,
+                    /*movf*/-1,/*movc*/-1,/*movl*/-1,
+                    /*swap*/-1,/*sref*/-1, /*link*/INT,/*arith*/-1,
+                    /*addf*/-1,/*addc*/-1,/*addl*/-1,/*import*/INT,/*lfun*/INT,
+                    /*done*/-1,/*ocall*/-1,/*ojmp*/-1,/*ns*/-1,/*ojez*/-1,
+                    /*lcall*/INT,/*ojnz*/-1 };
 
 // pop for all necessary functions.
 void parse(void) {
