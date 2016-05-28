@@ -11,27 +11,32 @@
 
 #define INT 0
 #define FLT 1
-#define END 2
-#define NIL 3
+#define LBL 2
+#define END 1000
+#define NIL 1001
 
 typedef struct { union { int64_t i; double f; } x; unsigned int type; } Lit;
 typedef struct Elem { Lit x; struct Elem *next; } Elem;
 typedef struct Stk { Lit x; struct Stk *prev; } Stk;
 
 Stk *stk; Elem *sth; Elem *sto;
+int *lbls; int lsz;
 
 void astk(Lit x) { if(stk->x.type==NIL) { stk->x = x; }
   else { Stk *e = malloc(sizeof(Stk)); e->prev = stk; stk = e; } }
 void asto(Lit x) { if(sto->x.type==NIL) { sto->x = x; }
   else { Elem *e = malloc(sizeof(Elem)); e->next = NULL; e->x = x; sto->next = e;
          sto = e; } }
+void albl(int64_t x) { if(lsz!=0) { 
+  lbls = realloc(lbls,(lsz+1)*sizeof(int64_t)); } lbls[lsz++] = x; }
 
 Lit tok(FILE *in) { Lit l; int c = fgetc(in); printf("%i\n",c); switch(c) {
   case INT: fread(&l.x.i,sizeof(int64_t),1,in); l.type = INT; break;
   case FLT: fread(&l.x.f,sizeof(double),1,in); l.type = FLT; break;
+  case LBL: fread(&l.x.i,sizeof(int64_t),1,in); l.type = LBL; break;
   case EOF: l.x.i = 0; l.type = END; } return l; }
-//void lexer(FILE *in, int lim) { Lit l; for(int i=0;((l=tok(in)).type!=END&&i<lim;i++) {
-  
+void lexer(FILE *in, int lim) { Lit l; for(int i=0;(l=tok(in)).type!=END&&i<lim;i++) {
+  if(l.type==LBL) { albl(l.x.i); } else { asto(x); } } }
 
 void error_callback(int error, const char* description) {
     fputs(description, stderr); }
@@ -82,6 +87,7 @@ int bclick(GLFWwindow *win, Rect b) {
 int main(void) {
   FILE *init; init = fopen("root.uo","rb");
   //FILE *mem; mem = fopen("mem.uo,"rb");
+  lbls = malloc(sizeof(int64_t)); lsz = 0;
   stk = malloc(sizeof(Stk)); stk->x.type = NIL; stk->prev = NULL;
   sth = sto = malloc(sizeof(Elem)); sto->x.type = NIL; sto->next = NULL; lexer(init); 
 
