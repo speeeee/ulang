@@ -12,31 +12,60 @@
 #define INT 0
 #define FLT 1
 #define LBL 2
+#define ADR 3
+#define SYS 4
 #define END 1000
 #define NIL 1001
 
-typedef struct { union { int64_t i; double f; } x; unsigned int type; } Lit;
+#define CAL 0
+#define RET 1
+#define JMP 2
+#define ADD 3
+#define SUB 4
+#define MUL 5
+#define DIV 6
+#define MEM 7
+
+typedef struct { union { int64_t i; double f; char x; } x; unsigned int type; } Lit;
 typedef struct Elem { Lit x; struct Elem *next; } Elem;
 typedef struct Stk { Lit x; struct Stk *prev; } Stk;
 
 Stk *stk; Elem *sth; Elem *sto;
-int *lbls; int lsz;
+Elem **lbls; int lsz;
 
+void pop(void) { Elem *e = stk; stk = stk->prev; free(e); }
 void astk(Lit x) { if(stk->x.type==NIL) { stk->x = x; }
   else { Stk *e = malloc(sizeof(Stk)); e->prev = stk; stk = e; } }
 void asto(Lit x) { if(sto->x.type==NIL) { sto->x = x; }
   else { Elem *e = malloc(sizeof(Elem)); e->next = NULL; e->x = x; sto->next = e;
          sto = e; } }
-void albl(int64_t x) { if(lsz!=0) { 
-  lbls = realloc(lbls,(lsz+1)*sizeof(int64_t)); } lbls[lsz++] = x; }
+void albl(Elem *x) { if(lsz!=0) { 
+  lbls = realloc(lbls,(lsz+1)*sizeof(Elem *)); } lbls[lsz++] = x; }
+
+void prim(char x) { switch(x) {
+  case 3: case 4: case 5: case 6: { 
+    if(stk->x.type==INT) { switch(x) {
+      case 3: { stk->prev->x = stk->x.x.i+stk->prev->x.x.i; }
+      case 4: { stk->prev->x = stk->x.x.i-stk->prev->x.x.i; }
+      case 5: { stk->prev->x = stk->x.x.i*stk->prev->x.x.i; }
+      case 6: { stk->prev->x = stk->x.x.i/stk->prev->x.x.i; } } }
+    else { switch(x) { case 3: { stk->prev->x = stk->x.x.f+stk->prev->x.x.f; }
+             case 4: { stk->prev->x = stk->x.x.f-stk->prev->x.x.f; }
+             case 5: { stk->prev->x = stk->x.x.f*stk->prev->x.x.f; }
+  	     case 6: { stk->prev->x = stk->x.x.f/stk->prev->x.x.f; } } } pop(); } }
 
 Lit tok(FILE *in) { Lit l; int c = fgetc(in); printf("%i\n",c); switch(c) {
   case INT: fread(&l.x.i,sizeof(int64_t),1,in); l.type = INT; break;
   case FLT: fread(&l.x.f,sizeof(double),1,in); l.type = FLT; break;
   case LBL: fread(&l.x.i,sizeof(int64_t),1,in); l.type = LBL; break;
+  case ADR: fread(&l.x.i,sizeof(int64_t),1,in); l.type = ADR; break;
+  case SYS: fread(&l.x.x,sizeof(char),1,in); l.type = SYS; break;
   case EOF: l.x.i = 0; l.type = END; } return l; }
 void lexer(FILE *in, int lim) { Lit l; for(int i=0;(l=tok(in)).type!=END&&i<lim;i++) {
-  if(l.type==LBL) { albl(l.x.i); } else { asto(x); } } }
+  if(l.type==LBL) { albl(sto); } else { asto(x); } } }
+void parse(Elem *st) { while(st&&st->x.type!=NIL) {
+  if(st->x.type==SYS) { prim(st->x.x.x); } else { astk(st->x); }
+  st = st->next; }
 
 void error_callback(int error, const char* description) {
     fputs(description, stderr); }
@@ -90,7 +119,7 @@ int main(void) {
   lbls = malloc(sizeof(int64_t)); lsz = 0;
   stk = malloc(sizeof(Stk)); stk->x.type = NIL; stk->prev = NULL;
   sth = sto = malloc(sizeof(Elem)); sto->x.type = NIL; sto->next = NULL; lexer(init); 
-
+  parse(sth);
   GLFWwindow* window; 
   glfwSetErrorCallback(error_callback);
   if (!glfwInit()) exit(EXIT_FAILURE);
