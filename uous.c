@@ -33,7 +33,7 @@ typedef struct Stk { Lit x; struct Stk *prev; } Stk;
 Stk *stk; Elem *sth; Elem *sto;
 Elem **lbls; int lsz;
 
-void pop(void) { Elem *e = stk; stk = stk->prev; free(e); }
+void pop(void) { Stk *e = stk; stk = stk->prev; free(e); }
 void astk(Lit x) { if(stk->x.type==NIL) { stk->x = x; }
   else { Stk *e = malloc(sizeof(Stk)); e->prev = stk; stk = e; } }
 void asto(Lit x) { if(sto->x.type==NIL) { sto->x = x; }
@@ -45,14 +45,14 @@ void albl(Elem *x) { if(lsz!=0) {
 void prim(char x) { switch(x) {
   case 3: case 4: case 5: case 6: { 
     if(stk->x.type==INT) { switch(x) {
-      case 3: { stk->prev->x = stk->x.x.i+stk->prev->x.x.i; }
-      case 4: { stk->prev->x = stk->x.x.i-stk->prev->x.x.i; }
-      case 5: { stk->prev->x = stk->x.x.i*stk->prev->x.x.i; }
-      case 6: { stk->prev->x = stk->x.x.i/stk->prev->x.x.i; } } }
-    else { switch(x) { case 3: { stk->prev->x = stk->x.x.f+stk->prev->x.x.f; }
-             case 4: { stk->prev->x = stk->x.x.f-stk->prev->x.x.f; }
-             case 5: { stk->prev->x = stk->x.x.f*stk->prev->x.x.f; }
-  	     case 6: { stk->prev->x = stk->x.x.f/stk->prev->x.x.f; } } } pop(); } }
+      case 3: { stk->prev->x.x.i = stk->x.x.i+stk->prev->x.x.i; }
+      case 4: { stk->prev->x.x.i = stk->x.x.i-stk->prev->x.x.i; }
+      case 5: { stk->prev->x.x.i = stk->x.x.i*stk->prev->x.x.i; }
+      case 6: { stk->prev->x.x.i = stk->x.x.i/stk->prev->x.x.i; } } }
+    else { switch(x) { case 3: { stk->prev->x.x.f = stk->x.x.f+stk->prev->x.x.f; }
+             case 4: { stk->prev->x.x.f = stk->x.x.f-stk->prev->x.x.f; }
+             case 5: { stk->prev->x.x.f = stk->x.x.f*stk->prev->x.x.f; }
+  	     case 6: { stk->prev->x.x.f = stk->x.x.f/stk->prev->x.x.f; } } } pop(); } } }
 
 Lit tok(FILE *in) { Lit l; int c = fgetc(in); printf("%i\n",c); switch(c) {
   case INT: fread(&l.x.i,sizeof(int64_t),1,in); l.type = INT; break;
@@ -61,11 +61,12 @@ Lit tok(FILE *in) { Lit l; int c = fgetc(in); printf("%i\n",c); switch(c) {
   case ADR: fread(&l.x.i,sizeof(int64_t),1,in); l.type = ADR; break;
   case SYS: fread(&l.x.x,sizeof(char),1,in); l.type = SYS; break;
   case EOF: l.x.i = 0; l.type = END; } return l; }
-void lexer(FILE *in, int lim) { Lit l; for(int i=0;(l=tok(in)).type!=END&&i<lim;i++) {
-  if(l.type==LBL) { albl(sto); } else { asto(x); } } }
+void lexer(FILE *in, int lim) { Lit l; 
+  for(int i=0;(l=tok(in)).type!=END&&(i<lim||lim==-1);i++) {
+    if(l.type==LBL) { albl(sto); } else { asto(l); } } }
 void parse(Elem *st) { while(st&&st->x.type!=NIL) {
   if(st->x.type==SYS) { prim(st->x.x.x); } else { astk(st->x); }
-  st = st->next; }
+  st = st->next; } }
 
 void error_callback(int error, const char* description) {
     fputs(description, stderr); }
@@ -92,7 +93,7 @@ void setup(GLFWwindow *win) {
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity(); }
 
-void paint(GLFWwindow *win, int mode) { 
+void paint(GLFWwindow *win) { 
   glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); glLoadIdentity();
   glClearColor(0.4,0.4,0.55,1.0);
   //glTranslatef(-c.x/10,-c.y/10,0); //printf("%f, %f, %f\n",c.z,c.x,c.y); 
@@ -101,11 +102,6 @@ void paint(GLFWwindow *win, int mode) {
 
 int pressed(GLFWwindow *win,int x) { return glfwGetKey(win,x)!=GLFW_RELEASE; }
 int mpressed(GLFWwindow *win, int x) { return glfwGetMouseButton(win,x); }
-// making drawing tool
-int bhover(GLFWwindow *win, Rect b) { double x, y;
-  glfwGetCursorPos(win,&x,&y); return x>b.x&&x<b.x+b.w&&y>b.y&&y<b.y+b.h; }
-int bclick(GLFWwindow *win, Rect b) { 
-  return mpressed(win,GLFW_MOUSE_BUTTON_LEFT)&&bhover(win,b); }
 
 /*int parse_input(GLFWwindow *win, int mode) { Rect ng = { 30, 30, 100, 30 };
   switch(mode) { case MTITLE:
@@ -118,8 +114,8 @@ int main(void) {
   //FILE *mem; mem = fopen("mem.uo,"rb");
   lbls = malloc(sizeof(int64_t)); lsz = 0;
   stk = malloc(sizeof(Stk)); stk->x.type = NIL; stk->prev = NULL;
-  sth = sto = malloc(sizeof(Elem)); sto->x.type = NIL; sto->next = NULL; lexer(init); 
-  parse(sth);
+  sth = sto = malloc(sizeof(Elem)); sto->x.type = NIL; sto->next = NULL; 
+  lexer(init,-1); parse(sth);
   GLFWwindow* window; 
   glfwSetErrorCallback(error_callback);
   if (!glfwInit()) exit(EXIT_FAILURE);
@@ -131,7 +127,7 @@ int main(void) {
   glfwSwapInterval(1);
   glfwSetKeyCallback(window, key_callback); setup(window);
   glfwSetFramebufferSizeCallback(window, rsz);
-  while (!glfwWindowShouldClose(window)) { paint(window,mode);
+  while (!glfwWindowShouldClose(window)) { paint(window);
     glfwSwapBuffers(window); glfwPollEvents(); }
   glfwDestroyWindow(window);
   glfwTerminate();
