@@ -41,7 +41,8 @@ Elem **lbls; int lsz;
 
 Ref *refs;
 
-void pop(void) { Stk *e = stk; stk = stk->prev; free(e); }
+void pop(void) { Stk *e = stk; stk = stk->prev; free(e); 
+  if(!stk) { stk = malloc(sizeof(Stk)); stk->prev = NULL; stk->x.type = NIL; } }
 void astk(Lit x) { if(stk->x.type==NIL) { stk->x = x; }
   else { Stk *e = malloc(sizeof(Stk)); e->prev = stk; stk = e; stk->x = x; } }
 void asto(Lit x) { if(sto->x.type==NIL) { sto->x = x; }
@@ -51,7 +52,8 @@ void albl(Elem *x) { if(lsz!=0) {
   lbls = realloc(lbls,(lsz+1)*sizeof(Elem *)); } lbls[lsz++] = x; }
 void aref(Elem *x) { if(refs->x) { Ref *r = malloc(sizeof(Ref)); r->prev = refs;
   refs = r; } refs->x = x; }
-void popr(void) { Ref *r = refs; refs = refs->prev; free(r); }
+void popr(void) { Ref *r = refs; refs = refs->prev; free(r);
+  if(!refs) { refs = malloc(sizeof(Ref)); refs->prev = NULL; refs->x = NULL; } }
 
 void prim(char x, Elem *st) { switch(x) {
   case 3: case 4: case 5: case 6: { 
@@ -78,7 +80,7 @@ void prim(char x, Elem *st) { switch(x) {
 Lit tok(FILE *in) { Lit l; int c = fgetc(in); /*printf("%i\n",c);*/ switch(c) {
   case INT: fread(&l.x.i,sizeof(int64_t),1,in); l.type = INT; break;
   case FLT: fread(&l.x.f,sizeof(double),1,in); l.type = FLT; break;
-  case LBL: fread(&l.x.i,sizeof(int64_t),1,in); l.type = LBL; break;
+  case LBL: /*fread(&l.x.i,sizeof(int64_t),1,in);*/ l.type = LBL; break;
   case ADR: fread(&l.x.i,sizeof(int64_t),1,in); l.type = ADR; break;
   case SYS: fread(&l.x.x,sizeof(char),1,in); l.type = SYS; break;
   case EOF: l.x.i = 0; l.type = END; } return l; }
