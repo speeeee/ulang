@@ -25,6 +25,11 @@
 #define MUL 5
 #define DIV 6
 #define MEM 7
+#define AND 8
+#define OR  9
+#define XOR 10
+#define SHL 11
+#define SHR 12
 
 typedef struct { union { int64_t i; double f; char x; } x; unsigned int type; } Lit;
 typedef struct Elem { Lit x; struct Elem *next; } Elem;
@@ -35,7 +40,7 @@ Elem **lbls; int lsz;
 
 void pop(void) { Stk *e = stk; stk = stk->prev; free(e); }
 void astk(Lit x) { if(stk->x.type==NIL) { stk->x = x; }
-  else { Stk *e = malloc(sizeof(Stk)); e->prev = stk; stk = e; } }
+  else { Stk *e = malloc(sizeof(Stk)); e->prev = stk; stk = e; stk->x = x; } }
 void asto(Lit x) { if(sto->x.type==NIL) { sto->x = x; }
   else { Elem *e = malloc(sizeof(Elem)); e->next = NULL; e->x = x; sto->next = e;
          sto = e; } }
@@ -45,16 +50,23 @@ void albl(Elem *x) { if(lsz!=0) {
 void prim(char x) { switch(x) {
   case 3: case 4: case 5: case 6: { 
     if(stk->x.type==INT) { switch(x) {
-      case 3: { stk->prev->x.x.i = stk->x.x.i+stk->prev->x.x.i; }
-      case 4: { stk->prev->x.x.i = stk->x.x.i-stk->prev->x.x.i; }
-      case 5: { stk->prev->x.x.i = stk->x.x.i*stk->prev->x.x.i; }
+      case 3: { stk->prev->x.x.i = stk->x.x.i+stk->prev->x.x.i; break; }
+      case 4: { stk->prev->x.x.i = stk->x.x.i-stk->prev->x.x.i; break; }
+      case 5: { stk->prev->x.x.i = stk->x.x.i*stk->prev->x.x.i; break; }
       case 6: { stk->prev->x.x.i = stk->x.x.i/stk->prev->x.x.i; } } }
-    else { switch(x) { case 3: { stk->prev->x.x.f = stk->x.x.f+stk->prev->x.x.f; }
-             case 4: { stk->prev->x.x.f = stk->x.x.f-stk->prev->x.x.f; }
-             case 5: { stk->prev->x.x.f = stk->x.x.f*stk->prev->x.x.f; }
-  	     case 6: { stk->prev->x.x.f = stk->x.x.f/stk->prev->x.x.f; } } } pop(); } } }
+    else { switch(x) { 
+             case 3: { stk->prev->x.x.f = stk->x.x.f+stk->prev->x.x.f; break; }
+             case 4: { stk->prev->x.x.f = stk->x.x.f-stk->prev->x.x.f; break; }
+             case 5: { stk->prev->x.x.f = stk->x.x.f*stk->prev->x.x.f; break; }
+  	     case 6: { stk->prev->x.x.f = stk->x.x.f/stk->prev->x.x.f; } } } pop(); 
+    break; }
+  case 8: { stk->prev->x.x.i = stk->prev->x.x.i&stk->x.x.i; pop(); break; }
+  case 9: { stk->prev->x.x.i = stk->prev->x.x.i|stk->x.x.i; pop(); break; }
+  case 10: { stk->prev->x.x.i = stk->prev->x.x.i^stk->x.x.i; pop(); break; }
+  case 11: { stk->prev->x.x.i = stk->prev->x.x.i<<stk->x.x.i; pop(); break; }
+  case 12: { stk->prev->x.x.i = stk->prev->x.x.i>>stk->x.x.i; pop(); break; } } }
 
-Lit tok(FILE *in) { Lit l; int c = fgetc(in); printf("%i\n",c); switch(c) {
+Lit tok(FILE *in) { Lit l; int c = fgetc(in); /*printf("%i\n",c);*/ switch(c) {
   case INT: fread(&l.x.i,sizeof(int64_t),1,in); l.type = INT; break;
   case FLT: fread(&l.x.f,sizeof(double),1,in); l.type = FLT; break;
   case LBL: fread(&l.x.i,sizeof(int64_t),1,in); l.type = LBL; break;
@@ -115,8 +127,8 @@ int main(void) {
   lbls = malloc(sizeof(int64_t)); lsz = 0;
   stk = malloc(sizeof(Stk)); stk->x.type = NIL; stk->prev = NULL;
   sth = sto = malloc(sizeof(Elem)); sto->x.type = NIL; sto->next = NULL; 
-  lexer(init,-1); parse(sth);
-  GLFWwindow* window; 
+  lexer(init,-1); parse(sth); printf("%lli\n",stk->x.x.i);
+  /*GLFWwindow* window; 
   glfwSetErrorCallback(error_callback);
   if (!glfwInit()) exit(EXIT_FAILURE);
   window = glfwCreateWindow(800, 800, "uous", NULL, NULL);
@@ -131,4 +143,4 @@ int main(void) {
     glfwSwapBuffers(window); glfwPollEvents(); }
   glfwDestroyWindow(window);
   glfwTerminate();
-  exit(EXIT_SUCCESS); }
+  exit(EXIT_SUCCESS);*/ return 0; }
