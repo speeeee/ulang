@@ -47,7 +47,7 @@ void asto(Lit x) { if(sto->x.type==NIL) { sto->x = x; }
 void albl(Elem *x) { if(lsz!=0) { 
   lbls = realloc(lbls,(lsz+1)*sizeof(Elem *)); } lbls[lsz++] = x; }
 
-void prim(char x) { switch(x) {
+void prim(char x, Elem *st) { switch(x) {
   case 3: case 4: case 5: case 6: { 
     if(stk->x.type==INT) { switch(x) {
       case 3: { stk->prev->x.x.i = stk->x.x.i+stk->prev->x.x.i; break; }
@@ -64,7 +64,8 @@ void prim(char x) { switch(x) {
   case 9: { stk->prev->x.x.i = stk->prev->x.x.i|stk->x.x.i; pop(); break; }
   case 10: { stk->prev->x.x.i = stk->prev->x.x.i^stk->x.x.i; pop(); break; }
   case 11: { stk->prev->x.x.i = stk->prev->x.x.i<<stk->x.x.i; pop(); break; }
-  case 12: { stk->prev->x.x.i = stk->prev->x.x.i>>stk->x.x.i; pop(); break; } } }
+  case 12: { stk->prev->x.x.i = stk->prev->x.x.i>>stk->x.x.i; pop(); break; }
+  case 2: st = lbls[stk->x.x.i]; pop(); break; } }
 
 Lit tok(FILE *in) { Lit l; int c = fgetc(in); /*printf("%i\n",c);*/ switch(c) {
   case INT: fread(&l.x.i,sizeof(int64_t),1,in); l.type = INT; break;
@@ -77,7 +78,7 @@ void lexer(FILE *in, int lim) { Lit l;
   for(int i=0;(l=tok(in)).type!=END&&(i<lim||lim==-1);i++) {
     if(l.type==LBL) { albl(sto); } else { asto(l); } } }
 void parse(Elem *st) { while(st&&st->x.type!=NIL) {
-  if(st->x.type==SYS) { prim(st->x.x.x); } else { astk(st->x); }
+  if(st->x.type==SYS) { prim(st->x.x.x,st); } else { astk(st->x); }
   st = st->next; } }
 
 void error_callback(int error, const char* description) {
