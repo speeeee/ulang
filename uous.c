@@ -34,9 +34,12 @@
 typedef struct { union { int64_t i; double f; char x; } x; unsigned int type; } Lit;
 typedef struct Elem { Lit x; struct Elem *next; } Elem;
 typedef struct Stk { Lit x; struct Stk *prev; } Stk;
+typedef struct Ref { Elem *x; struct Ref *prev; } Ref;
 
 Stk *stk; Elem *sth; Elem *sto;
 Elem **lbls; int lsz;
+
+Ref *refs;
 
 void pop(void) { Stk *e = stk; stk = stk->prev; free(e); }
 void astk(Lit x) { if(stk->x.type==NIL) { stk->x = x; }
@@ -46,6 +49,9 @@ void asto(Lit x) { if(sto->x.type==NIL) { sto->x = x; }
          sto = e; } }
 void albl(Elem *x) { if(lsz!=0) { 
   lbls = realloc(lbls,(lsz+1)*sizeof(Elem *)); } lbls[lsz++] = x; }
+void aref(Elem *x) { if(refs->x) { Ref *r = malloc(sizeof(Ref)); r->prev = refs;
+  refs = r; } refs->x = x; }
+void popr(void) { Ref *r = refs; refs = refs->prev; free(r); }
 
 void prim(char x, Elem *st) { switch(x) {
   case 3: case 4: case 5: case 6: { 
@@ -65,7 +71,9 @@ void prim(char x, Elem *st) { switch(x) {
   case 10: { stk->prev->x.x.i = stk->prev->x.x.i^stk->x.x.i; pop(); break; }
   case 11: { stk->prev->x.x.i = stk->prev->x.x.i<<stk->x.x.i; pop(); break; }
   case 12: { stk->prev->x.x.i = stk->prev->x.x.i>>stk->x.x.i; pop(); break; }
-  case 2: st = lbls[stk->x.x.i]; pop(); break; } }
+  case 2: st = lbls[stk->x.x.i]; pop(); break;
+  case 0: aref(st); st = lbls[stk->x.x.i]; pop(); break; 
+  case 1: st = refs->x; popr(); break; } }
 
 Lit tok(FILE *in) { Lit l; int c = fgetc(in); /*printf("%i\n",c);*/ switch(c) {
   case INT: fread(&l.x.i,sizeof(int64_t),1,in); l.type = INT; break;
@@ -126,6 +134,7 @@ int main(void) {
   FILE *init; init = fopen("root.uo","rb");
   //FILE *mem; mem = fopen("mem.uo,"rb");
   lbls = malloc(sizeof(int64_t)); lsz = 0;
+  refs = malloc(sizeof(Ref)); refs->x = NULL; refs->prev = NULL;
   stk = malloc(sizeof(Stk)); stk->x.type = NIL; stk->prev = NULL;
   sth = sto = malloc(sizeof(Elem)); sto->x.type = NIL; sto->next = NULL; 
   lexer(init,-1); parse(sth); printf("%lli\n",stk->x.x.i);
