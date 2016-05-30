@@ -30,6 +30,7 @@
 #define XOR 10
 #define SHL 11
 #define SHR 12
+#define QUIT 13
 
 typedef struct { union { int64_t i; double f; char x; } x; unsigned int type; } Lit;
 typedef struct Elem { Lit x; struct Elem *next; } Elem;
@@ -55,7 +56,7 @@ void aref(Elem *x) { if(refs->x) { Ref *r = malloc(sizeof(Ref)); r->prev = refs;
 void popr(void) { Ref *r = refs; refs = refs->prev; free(r);
   if(!refs) { refs = malloc(sizeof(Ref)); refs->prev = NULL; refs->x = NULL; } }
 
-void prim(char x, Elem *st) { switch(x) {
+void prim(char x, Elem **st) { switch(x) {
   case 3: case 4: case 5: case 6: { 
     if(stk->x.type==INT) { switch(x) {
       case 3: { stk->prev->x.x.i = stk->x.x.i+stk->prev->x.x.i; break; }
@@ -73,9 +74,10 @@ void prim(char x, Elem *st) { switch(x) {
   case 10: { stk->prev->x.x.i = stk->prev->x.x.i^stk->x.x.i; pop(); break; }
   case 11: { stk->prev->x.x.i = stk->prev->x.x.i<<stk->x.x.i; pop(); break; }
   case 12: { stk->prev->x.x.i = stk->prev->x.x.i>>stk->x.x.i; pop(); break; }
-  case 2: st = lbls[stk->x.x.i]; pop(); break;
-  case 0: aref(st); st = lbls[stk->x.x.i]; pop(); break; 
-  case 1: st = refs->x; popr(); break; } }
+  case 2: *(st) = lbls[stk->x.x.i]; pop(); break;
+  case 0: aref(*st); *(st) = lbls[stk->x.x.i]; pop(); break; 
+  case 1: *(st) = refs->x; popr(); break;
+  case 13: printf("%lli\n",stk->x.x.i); exit(EXIT_SUCCESS); } }
 
 Lit tok(FILE *in) { Lit l; int c = fgetc(in); /*printf("%i\n",c);*/ switch(c) {
   case INT: fread(&l.x.i,sizeof(int64_t),1,in); l.type = INT; break;
@@ -88,7 +90,7 @@ void lexer(FILE *in, int lim) { Lit l;
   for(int i=0;(l=tok(in)).type!=END&&(i<lim||lim==-1);i++) {
     if(l.type==LBL) { albl(sto); } else { asto(l); } } }
 void parse(Elem *st) { while(st&&st->x.type!=NIL) {
-  if(st->x.type==SYS) { prim(st->x.x.x,st); } else { astk(st->x); }
+  if(st->x.type==SYS) { prim(st->x.x.x,&st); } else { astk(st->x); }
   st = st->next; } }
 
 void error_callback(int error, const char* description) {
@@ -138,8 +140,8 @@ int main(void) {
   lbls = malloc(sizeof(int64_t)); lsz = 0;
   refs = malloc(sizeof(Ref)); refs->x = NULL; refs->prev = NULL;
   stk = malloc(sizeof(Stk)); stk->x.type = NIL; stk->prev = NULL;
-  sth = sto = malloc(sizeof(Elem)); sto->x.type = NIL; sto->next = NULL; 
-  lexer(init,-1); parse(sth); printf("%lli\n",stk->x.x.i);
+  sth = sto = malloc(sizeof(Elem)); sto->x.type = NIL; sto->next = NULL;
+  lexer(init,-1); sto = sth; parse(sto); printf("%lli\n",stk->x.x.i);
   /*GLFWwindow* window; 
   glfwSetErrorCallback(error_callback);
   if (!glfwInit()) exit(EXIT_FAILURE);
