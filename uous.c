@@ -145,7 +145,8 @@ int main(void) {
   refs = malloc(sizeof(Ref)); refs->x = NULL; refs->prev = NULL;
   stk = malloc(sizeof(Stk)); stk->x.type = NIL; stk->prev = NULL;
   sth = sto = malloc(sizeof(Elem)); sto->x.type = NIL; sto->next = NULL;
-  lexer(init,-1); stc = sth; parse(stc,mem); printf("%lli\n",stk->x.x.i);
+  lexer(init,-1); fclose(init); stc = sth; parse(stc,mem); printf("%lli\n",stk->x.x.i);
+  fclose(mem);
   /*GLFWwindow* window; 
   glfwSetErrorCallback(error_callback);
   if (!glfwInit()) exit(EXIT_FAILURE);
