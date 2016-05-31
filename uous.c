@@ -31,7 +31,11 @@
 #define SHL 11
 #define SHR 12
 #define QUIT 13
-#define DUMP 14
+#define DUMP 14 // UNTESTED from here on.
+#define LIFT 15
+#define DROP 16
+#define NOT  17
+#define JEZ  18
 
 // sth: head
 // stc: current position
@@ -91,7 +95,13 @@ void prim(char x, Elem **st, FILE *m, FILE *d) { switch(x) {
   case 7: fseek(m,stk->prev->x.x.i,SEEK_SET); lexer(m,stk->x.x.i); 
           pop(); pop(); break;
   case 14: { Stk *e = stk; while(e) { out(e,d); Stk *f = e->prev; free(e); e = f; }
-    break; }
+    stk = e; stk = malloc(sizeof(Stk)); stk->x.type = NIL; break; }
+  case 15: { int64_t x = stk->x.x.i; pop(); Stk *e = stk;
+    for(int i=0;i<x-1;i++) { e = e->prev; } Stk *f = e; e->prev = e->prev->prev;
+    f->prev = e; break; }
+  case 16: pop(); break; case 17: stk->x.x.i = stk->x.x.i?0:1; break;
+  case 18: { int64_t q = stk->x.x.i; pop(); 
+    if(!q) { *(st) = lbls[stk->x.x.i]; } pop(); break; }
   case 13: printf("%lli\n",stk->x.x.i); exit(EXIT_SUCCESS); } }
 
 Lit tok(FILE *in) { Lit l; int c = fgetc(in); /*printf("%i\n",c);*/ switch(c) {
