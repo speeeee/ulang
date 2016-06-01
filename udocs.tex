@@ -1,0 +1,120 @@
+\documentclass[12pt]{report}
+\title{uous System}
+\author{Spencer Sallay}
+\setcounter{section}{0}
+\setcounter{secnumdepth}{3}
+\usepackage[pdftex,bookmarks,colorlinks]{hyperref}
+\usepackage{longtable}
+\begin{document}
+  \maketitle
+  \LaTeX{}
+  \tableofcontents
+  \newpage
+  \chapter{Introduction}
+  This is a reference of the \verb|uous| byte-code interpreter.  \verb|uous| is a 
+  small hobby project that essentially is a very simplistic VM.  The byte-code is
+  a simple stack-based language. This is more just to list how the system works, and
+  is not really useful.  The document itself isn't very well formatted yet either,
+  so it may be difficult to read.
+
+  \section{Design}
+  As mentioned before, the system is made up of several components.  One of these
+  components is the byte-code interpreter itself, which acts as a way to create the
+  system itself.  
+
+  \subsection{Storage}
+  There are two files that the interpreter reads in order to run.
+  The first of these two files is the file, \verb|root.uo|.  For further reference,
+  \verb|.uo| is the extension for any file relating to \verb|uous|.  \verb|root.uo| is
+  is the file that is read automatically when booting up the system.  In this file,
+  code should be written that is expected to be run every time the system boots up.
+  Conversely, the file \verb|mem.uo| is where to write code that is not expected
+  to be read immediately.  There exist functions in the byte code that allow
+  reading of a number of bytes at a certain position in \verb|mem.uo| and then parsing
+  them.  \verb|mem.uo| is for long-term storage, generally.
+
+  The specifics of how to read code from \verb|mem.uo| and how exactly \verb|root.uo|
+  is read is explained later.
+
+  \subsection{Interpreter}
+  As mentioned before, when the system starts, the file that is immediately read is
+  \verb|root.uo|.  More specifically, the \emph{entire} file is read and stored into
+  a linked list to be parsed sequentially.  What this means is that \verb|root.uo| is
+  read once and then closed, so the file will already be closed by the time the
+  program is actually being parsed.  This is what \verb|mem.uo| is for.
+
+  For example, there are a few files on a system.  For this example, a
+  file consists of 8 bytes denoting the size of the data contained within itself, and
+  the data itself.  Of course, it is probably not ideal to load all files on a
+  system every time the system starts, rather it is probably better to load them
+  upon request.  It is possible that a certain file will never be called upon in the
+  first place, making it a waste if it were to be loaded in \verb|root.uo|.  The
+  interpreter has a function that takes as parameters the location (in bytes) where
+  the interpreter should start reading and the amount of tokens (size variable) that
+  should be read in \verb|mem.uo|.
+
+  Finally, there is a third file called \verb|dump.uo|.  For now, this file will be
+  ignored, as it is just a file to transfer output from the interpreter to
+  \verb|mem.uo|.
+
+  The actual syntax of \verb|uous| is very simple.  The following examples are
+  written using big-endian notation.  All commands in \verb|uous| are represented
+  by a byte.  For example, \verb|0| is the command to push an integer value to the
+  stack.  The following is a more comprehensive list of all of the commands:
+  \begin{tabular}{ r | c || l }
+  0 & [8-bytes] & push integer (64-bit signed) \\
+  1 & [8-bytes] & push float (64-bit) \\
+  2 & [0-bytes] & create label \\
+  4 & [1-byte] & system/function call \\
+  \end{tabular}
+
+  There is one final thing to mention about the language itself, and it is the idea
+  of labels.  Like in many assemblers (e.g. x86), there exist labels which can be
+  used with commands like \verb|jmp| to "jump" to a different spot in a program and
+  continue reading.  There is also \verb|call|, which is discussed in the reference.
+  When the label command is called, the position of the program is stored in a list
+  of other labels\footnote{Note that this storage happens during the reading phase
+  of program running, and not during parsing}.
+
+  \chapter{Reference}
+  The following table is a reference for all of the functions in the language.
+  Functions can be called using the system/function call command (e.g.
+  [04][02] is an example, where the brackets separate the two bytes for clearer
+  reading).  All of the functions affect the stack.  Note that when \emph{Nothing} is
+  used to describe an input/output, this is ignoring side-effects.
+
+  \begin{longtable}{ l | l | l || p{6cm} }
+  Name & In & Out & Description \\
+  Call & \verb|label| & \emph{Nothing} & This functions exactly as \verb|jmp| does,
+  but with the side-effect of adding the position jumped from to a reference stack.
+  The accompanying function, \verb|ret|, uses this reference stack. \\
+  Return & \emph{Nothing} & \emph{Nothing} & \verb|ret| takes the pointer at the
+  top of the reference stack and jumps to it.  Usually, this pointer returns the
+  program to a position that was previously jumped from. \\
+  Jump & \verb|label| & \emph{Nothing} & This takes a label as represented by an
+  8-byte integer and jumps to the pointer associated with that label. \\
+  + - * / & 2 (\verb|int| or \verb|float|) & Same type as inputs &
+  These are some of the standard mathematical operations.  They act as expected with
+  no side-effects. \\
+  MEM & \verb|int|:n \verb|int|:m & \emph{Nothing} & This reads an amount of bytes
+  (\emph{m}) from a certain position (\emph{n}) of \verb|mem.uo| and parses
+  them.  This newly parsed code is appended to the end of the storage of the
+  program. \\
+  Quit & \emph{Nothing} & \emph{Nothing} & Quits the program. \\
+  Dump & \emph{Nothing} & \emph{Nothing} & This is an important command that dumps
+  the entirety of the contents of the stack into \verb|dump.uo|.  Once the program
+  quits, The contents of \verb|dump.uo| are appended to \verb|mem.uo|.  This is a way
+  to save data long-term during a session. \\
+  Lift & \verb|int|:x & \emph{Special} & This function takes the item \emph{x}
+  places from the top of the stack (\emph{x} itself is not included on the stack) and
+  brings it to the front.  This moves the actual position, and does not copy the
+  value to the front. \\
+  Drop & \verb|any| & \emph{Nothing} & This removes the value at the top of the
+  stack. \\
+  Not & \verb|int| & \verb|int| & If the parameter given is \verb|0|, then
+  \verb|1| is returned.  If given any non-zero value, \verb|0| is returned\footnote{0
+  and 1 act as the two boolean values.} \\
+  JEZ & \verb|int|:l \verb|int|:c & \emph{Nothing} & This is the conditional jump, and
+  only performs a jump to label \emph{l} given that integer \emph{c} is zero. \\
+  \end{longtable}
+\end{document}
