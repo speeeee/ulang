@@ -160,6 +160,18 @@ int mpressed(GLFWwindow *win, int x) { return glfwGetMouseButton(win,x); }
   default: return mode; } }*/
   
 int main(void) {
+  GLFWwindow* window; 
+  glfwSetErrorCallback(error_callback);
+  if (!glfwInit()) exit(EXIT_FAILURE);
+  window = glfwCreateWindow(800, 800, "uous", NULL, NULL);
+  if (!window) {
+      glfwTerminate();
+      exit(EXIT_FAILURE); }
+  glfwMakeContextCurrent(window);
+  glfwSwapInterval(1);
+  glfwSetKeyCallback(window, key_callback); setup(window);
+  glfwSetFramebufferSizeCallback(window, rsz);
+
   FILE *init; init = fopen("root.uo","rb");
   FILE *mem; mem = fopen("mem.uo","rb");
   FILE *dump; dump = fopen("dump.uo","wb");
@@ -172,19 +184,8 @@ int main(void) {
   fclose(mem); fclose(dump); dump = fopen("dump.uo","rb");
   mem = fopen("mem.uo","ab"); int c;
   while((c=fgetc(dump))!=EOF) { fwrite(&c,1,1,mem); } fclose(mem); fclose(dump);
-  /*GLFWwindow* window; 
-  glfwSetErrorCallback(error_callback);
-  if (!glfwInit()) exit(EXIT_FAILURE);
-  window = glfwCreateWindow(800, 800, "uous", NULL, NULL);
-  if (!window) {
-      glfwTerminate();
-      exit(EXIT_FAILURE); }
-  glfwMakeContextCurrent(window);
-  glfwSwapInterval(1);
-  glfwSetKeyCallback(window, key_callback); setup(window);
-  glfwSetFramebufferSizeCallback(window, rsz);
   while (!glfwWindowShouldClose(window)) { paint(window);
     glfwSwapBuffers(window); glfwPollEvents(); }
-  glfwDestroyWindow(window);
+  glfwDestroyWindow(window); // these lines will be up to the interptreter later.
   glfwTerminate();
-  exit(EXIT_SUCCESS);*/ return 0; }
+  exit(EXIT_SUCCESS); return 0; }
