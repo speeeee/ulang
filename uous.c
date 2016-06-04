@@ -36,6 +36,7 @@
 #define DROP 16
 #define NOT  17
 #define JEZ  18
+#define COL  19
 
 // sth: head
 // stc: current position
@@ -102,6 +103,8 @@ void prim(char x, Elem **st, FILE *m, FILE *d) { switch(x) {
   case 16: pop(); break; case 17: stk->x.x.i = stk->x.x.i?0:1; break;
   case 18: { int64_t q = stk->x.x.i; pop(); 
     if(!q) { *(st) = lbls[stk->x.x.i]; } pop(); break; }
+  case 19: { double r,g,b; b = stk->x.x.f; pop(); g = stk->x.x.f; pop();
+    r = stk->x.x.f; pop(); glColor3f(r,g,b); break; }
   case 13: printf("%lli\n",stk->x.x.i); exit(EXIT_SUCCESS); } }
 
 Lit tok(FILE *in) { Lit l; int c = fgetc(in); /*printf("%i\n",c);*/ switch(c) {
@@ -114,9 +117,10 @@ Lit tok(FILE *in) { Lit l; int c = fgetc(in); /*printf("%i\n",c);*/ switch(c) {
 void lexer(FILE *in, int lim) { Lit l; 
   for(int i=0;(l=tok(in)).type!=END&&(i<lim||lim==-1);i++) {
     if(l.type==LBL) { albl(sto); } else { asto(l); } } }
-void parse(Elem *st, FILE *m, FILE *d) { while(st&&st->x.type!=NIL) {
-  if(st->x.type==SYS) { prim(st->x.x.x,&st,m,d); } else { astk(st->x); }
-  st = st->next; } }
+void parse(Elem *st, FILE *m, FILE *d, GLFWwindow *w) { 
+  while(st&&st->x.type!=NIL&&!glfwWindowShouldClose(w)) {
+    if(st->x.type==SYS) { prim(st->x.x.x,&st,m,d); } else { astk(st->x); }
+    st = st->next; glfwSwapBuffers(w); glfwPollEvents(); } }
 
 void error_callback(int error, const char* description) {
     fputs(description, stderr); }
@@ -179,13 +183,13 @@ int main(void) {
   refs = malloc(sizeof(Ref)); refs->x = NULL; refs->prev = NULL;
   stk = malloc(sizeof(Stk)); stk->x.type = NIL; stk->prev = NULL;
   sth = sto = malloc(sizeof(Elem)); sto->x.type = NIL; sto->next = NULL;
-  lexer(init,-1); fclose(init); stc = sth; parse(stc,mem,dump);
+  lexer(init,-1); fclose(init); stc = sth; parse(stc,mem,dump,window);
   printf("%lli\n",stk->x.x.i);
   fclose(mem); fclose(dump); dump = fopen("dump.uo","rb");
   mem = fopen("mem.uo","ab"); int c;
   while((c=fgetc(dump))!=EOF) { fwrite(&c,1,1,mem); } fclose(mem); fclose(dump);
-  while (!glfwWindowShouldClose(window)) { paint(window);
-    glfwSwapBuffers(window); glfwPollEvents(); }
+  //while (!glfwWindowShouldClose(window)) { paint(window);
+  //  glfwSwapBuffers(window); glfwPollEvents(); }
   glfwDestroyWindow(window); // these lines will be up to the interptreter later.
   glfwTerminate();
   exit(EXIT_SUCCESS); return 0; }
