@@ -34,7 +34,6 @@
 #define DUMP 14 // UNTESTED from here on.
 #define LIFT 15
 #define DROP 16
-#define NOT  17
 #define JEZ  18
 #define COL  19
 
@@ -100,7 +99,7 @@ void prim(char x, Elem **st, FILE *m, FILE *d) { switch(x) {
   case 15: { int64_t x = stk->x.x.i; pop(); Stk *e = stk;
     for(int i=0;i<x-1;i++) { e = e->prev; } Stk *f = e; e->prev = e->prev->prev;
     f->prev = e; break; }
-  case 16: pop(); break; case 17: stk->x.x.i = stk->x.x.i?0:1; break;
+  case 16: pop(); break; 
   case 18: { int64_t q = stk->x.x.i; pop(); 
     if(!q) { *(st) = lbls[stk->x.x.i]; } pop(); break; }
   case 19: { double r,g,b; b = stk->x.x.f; pop(); g = stk->x.x.f; pop();
